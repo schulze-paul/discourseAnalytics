@@ -7,14 +7,14 @@ import json
 from pathlib import Path
 import logging
 import progressbar
-import ast
+import io
 
 progressbar.streams.wrap_stderr()
 logging.basicConfig()
 
 class DataBase:
 
-    user_list_html_filename = 'Online Data/South London Makerspace/Discourse/Users - Discourse – South London Makerspace.htm'
+    user_list_html_filename = 'datasets/Discourse/user_list/user_list.htm'
     user_base_data_filename = 'user_data.json'
     user_base_data_list = []
 
@@ -244,14 +244,16 @@ class DataBase:
 
             return postings_json
 
-        def write_post_history_to_json(post_history_json_filename, postings_json):
+        def write_post_history_to_html(post_history_json_filename, post_history_html):
             open(post_history_json_filename, 'x')
-            with open(post_history_json_filename, 'a+') as outfile:
-                json.dump(postings_json, outfile)
+            with io.open(post_history_json_filename, 'w', encoding="utf-8") as outfile:
+                outfile.write(post_history_html)
+                outfile.close()
 
-        print("collecting user post history:")
 
-        # go through all the users
+        print("downloading user post history to html:")
+
+        # go through all the users and download post histories to html files
         for user_index in range(len(user_base_data_list)):
             user_data = user_base_data_list[user_index]
             print("user profile (" + str(user_index).zfill(4) + "/" + str(len(user_base_data_list)) + ")", end="") 
@@ -279,10 +281,10 @@ class DataBase:
 
             # if we need the post history, check if it has been downloaded and saved already
             if user_post_history_needed:
-                post_history_json_filename = str(user_index).zfill(4) + "_post_history.json"
+                post_history_html_filename = "./raw_data/post_history_html" + str(user_index).zfill(4) + ".html"
                 
                 # if file already exists, data has been downloaded
-                if Path(post_history_json_filename).is_file():
+                if Path(post_history_html_filename).is_file():
                     data_has_been_downloaded = True
                     print(" data has been downloaded already.")
                 else:
@@ -293,11 +295,9 @@ class DataBase:
                     post_history_url = user_data['url'] + "/activity"
                     print(" downloading post history.", end="")
                     post_history_html = self.get_html_from_url(post_history_url)
-                    post_history_json = decode_post_history_html_to_json(post_history_html)
-                    print(" writing post history to json: " + post_history_json_filename)
-                    write_post_history_to_json(post_history_json_filename, post_history_json)
+                    print(" writing post history to html: " + post_history_html_filename)
+                    write_post_history_to_html(post_history_html_filename, post_history_html)
                 
-                user_data['post_history_filename'] = post_history_json_filename
             else:
                 # if post history is not needed, file is not created
                 user_data['post_history_filename'] = None    
