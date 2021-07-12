@@ -281,7 +281,7 @@ class DataBase:
 
             # if we need the post history, check if it has been downloaded and saved already
             if user_post_history_needed:
-                post_history_html_filename = "./raw_data/post_history_html" + str(user_index).zfill(4) + ".html"
+                post_history_html_filename = "./datasets/Discourse/post_history/" + str(user_index).zfill(4) + ".html"
                 
                 # if file already exists, data has been downloaded
                 if Path(post_history_html_filename).is_file():
