@@ -15,7 +15,7 @@ logging.basicConfig()
 class DownloadUserData:
 
     
-    def __init__(self, html_file_name):
+    def __init__(self):
 
         self.user_list_html_filename = 'datasets/Discourse/user_list/user_list.htm'
         self.user_base_data_filename = 'datasets/Discourse/users_base_data/user_data.json'
@@ -110,41 +110,44 @@ class DownloadUserData:
             """ 
             user_html = self.get_html_from_url(user_data['url'])
 
-            # create soup
-            user_soup = soup(user_html, "html.parser")
-            user_divs = user_soup.find_all("div", {"class": "secondary"})
-            
-            # get the time stamps 
-            timestamp_list = []
-            for div in user_divs:
-                time_divs = div.find_all("span", {"class": "relative-date date"})
-                for time_div in time_divs:
-                    timestamp = int(time_div['data-time'])
-                    timestamp_list.append(timestamp)
-            
-            # set the join time
-            if len(timestamp_list) >=1:
-                user_data['join'] = timestamp_list[0]
-            else:
-                user_data['join'] = None
+            if user_html is not None:
+                # create soup
+                user_soup = soup(user_html, "html.parser")
+                user_divs = user_soup.find_all("div", {"class": "secondary"})
+                
+                # get the time stamps 
+                timestamp_list = []
+                for div in user_divs:
+                    time_divs = div.find_all("span", {"class": "relative-date date"})
+                    for time_div in time_divs:
+                        timestamp = int(time_div['data-time'])
+                        timestamp_list.append(timestamp)
+                
+                # set the join time
+                if len(timestamp_list) >=1:
+                    user_data['join'] = timestamp_list[0]
+                else:
+                    user_data['join'] = None
 
-            # set last post time, if there are any posts
-            if len(timestamp_list) >= 3:
-                user_data['last_post'] = timestamp_list[1]
-            else:
-                user_data['last_post'] = None
+                # set last post time, if there are any posts
+                if len(timestamp_list) >= 3:
+                    user_data['last_post'] = timestamp_list[1]
+                    user_data['no_activity'] = False
+                else:
+                    user_data['last_post'] = None
+                    user_data['no_activity'] = True
 
-            # decide if profile is outdated
-            if user_data['last_post'] != None:
-                if datetime.fromtimestamp(user_data['last_post']/1000).year < 2020:
-                    # if last post is older than 2020, its outdated:
-                    user_data['outdated'] = True
+                # decide if profile is outdated
+                if user_data['last_post'] != None:
+                    if datetime.fromtimestamp(user_data['last_post']/1000).year < 2020:
+                        # if last post is older than 2020, its outdated:
+                        user_data['outdated'] = True
+                    else:
+                        user_data['outdated'] = False
                 else:
                     user_data['outdated'] = False
-            else:
-                user_data['outdated'] = False
 
-            return user_data
+                return user_data
         
         def decode_post_history_html_to_json(post_history_html):
             
@@ -259,8 +262,8 @@ class DownloadUserData:
         # go through all the users and download post histories to html files
         for user_index in range(len(user_base_data_list)):
             user_data = user_base_data_list[user_index]
-            print("user profile (" + str(user_index).zfill(4) + "/" + str(len(user_base_data_list)) + ")", end="") 
-            print(" \"" + user_data['username'] + "\":", end="")
+            print("( user " + str(user_index).zfill(4) + " / " + str(len(user_base_data_list)) + " )", end="") 
+            print(" \"" + user_data['username'] + "\": ", end="")
 
             # check if timeframe is set
             try:
@@ -272,43 +275,44 @@ class DownloadUserData:
             if not time_frame_set:
                 # set join date and last post
                 user_data = set_time_frame(user_data)
-            
-            # decide if the post history of that user is needed:
-            user_post_history_needed = True
-            if user_data['outdated']:
-                user_post_history_needed = False
-                print(" is outdated.")
-            if user_data['last_post'] == None or user_data['join'] == None:
-                user_post_history_needed = False
-                print(" has no activity.")
 
-            # if we need the post history, check if it has been downloaded and saved already
-            if user_post_history_needed:
-                post_history_html_filename = "./datasets/Discourse/post_history/" + str(user_index).zfill(4) + ".html"
-                
-                # if file already exists, data has been downloaded
-                if Path(post_history_html_filename).is_file():
-                    data_has_been_downloaded = True
-                    print(" data has been downloaded already.")
+            if user_data is not None:    
+                # decide if the post history of that user is needed:
+                user_post_history_needed = True
+                if user_data['outdated']:
+                    user_post_history_needed = False
+                    print(" is outdated.")
+                if user_data['last_post'] == None or user_data['join'] == None:
+                    user_post_history_needed = False
+                    print(" has no activity.")
+
+                # if we need the post history, check if it has been downloaded and saved already
+                if user_post_history_needed:
+                    post_history_html_filename = "./datasets/Discourse/post_history/" + str(user_index).zfill(4) + ".html"
+                    
+                    # if file already exists, data has been downloaded
+                    if Path(post_history_html_filename).is_file():
+                        data_has_been_downloaded = True
+                        print(" data has been downloaded already.")
+                    else:
+                        data_has_been_downloaded = False
+
+                    if not data_has_been_downloaded :
+                        # download data and save to json
+                        post_history_url = user_data['url'] + "/activity"
+                        print(" downloading post history.", end="")
+                        post_history_html = self.get_html_from_url(post_history_url)
+                        print(" writing post history to html: " + post_history_html_filename)
+                        write_post_history_to_html(post_history_html_filename, post_history_html)
+                    
                 else:
-                    data_has_been_downloaded = False
-
-                if not data_has_been_downloaded :
-                    # download data and save to json
-                    post_history_url = user_data['url'] + "/activity"
-                    print(" downloading post history.", end="")
-                    post_history_html = self.get_html_from_url(post_history_url)
-                    print(" writing post history to html: " + post_history_html_filename)
-                    write_post_history_to_html(post_history_html_filename, post_history_html)
+                    # if post history is not needed, file is not created
+                    user_data['post_history_filename'] = None    
                 
-            else:
-                # if post history is not needed, file is not created
-                user_data['post_history_filename'] = None    
-            
-            # update user base data in list
-            user_base_data_list[user_index] = user_data
-            # update user base data in json
-            self.write_base_data_to_json(user_base_data_list)
+                # update user base data in list
+                user_base_data_list[user_index] = user_data
+                # update user base data in json
+                self.write_base_data_to_json(user_base_data_list)
 
         return user_base_data_list
             
@@ -349,6 +353,7 @@ class DownloadUserData:
             driver.get(url)
         except:
             print("chromedriver could not get page, skipping to next")
+            return None
         scroll_down(driver)
         html = driver.page_source
         driver.quit()
