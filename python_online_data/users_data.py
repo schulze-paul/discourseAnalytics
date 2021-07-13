@@ -12,26 +12,29 @@ import io
 progressbar.streams.wrap_stderr()
 logging.basicConfig()
 
-class DataBase:
+class DownloadUserData:
 
-    user_list_html_filename = 'datasets/Discourse/user_list/user_list.htm'
-    user_base_data_filename = 'user_data.json'
-    user_base_data_list = []
-
+    
     def __init__(self, html_file_name):
-        
-        try:
+
+        self.user_list_html_filename = 'datasets/Discourse/user_list/user_list.htm'
+        self.user_base_data_filename = 'datasets/Discourse/users_base_data/user_data.json'
+        self.user_base_data_list = []
+
+    def __call__(self, overwrite_base_data_json=False):
+
+        if not overwrite_base_data_json:
             # try to get userdata from json
             with open(self.user_base_data_filename, 'r') as user_base_data_json_file:
                 self.user_base_data_list = json.loads(user_base_data_json_file.read())
             print("loading user base data from json")
-        except:
+        if overwrite_base_data_json:
             # get user base data and write to json
             self.user_base_data_list = self.get_users_base_data_from_html_users_list(self.user_list_html_filename)
             self.write_base_data_to_json(self.user_base_data_list)
 
-        # get the post history and create files
-        self.get_post_history_and_write_to_json(self.user_base_data_list)
+        # get the post history and create html files
+        self.get_post_history_and_write_to_html(self.user_base_data_list)
 
         # update user base data with time frame and post history reference 
         self.write_base_data_to_json(self.user_base_data_list)
@@ -92,7 +95,7 @@ class DataBase:
         with open(self.user_base_data_filename, 'w') as outfile:
             json.dump(user_base_data_list, outfile)
     
-    def get_post_history_and_write_to_json(self, user_base_data_list):
+    def get_post_history_and_write_to_html(self, user_base_data_list):
         """
         Goes through the user base data and sets attributes like join time, last post time,
         decides if the profile is outdated (last post older than 2020), or inactive (no posts).
