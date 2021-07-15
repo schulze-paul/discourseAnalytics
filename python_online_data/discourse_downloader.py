@@ -7,14 +7,10 @@ from pathlib import Path
 from bs4 import BeautifulSoup as soup
 
 
-class DiscourseDataDownloader():
+class DiscourseDownloader():
     """
-    This utility downloads data from a discourse forum website:
-    - the html file with the list of users
-    - html files for each profile
-    - html files for each post history
-
-    returns filepaths for the html files:
+    Discourse downloader class
+    Defines a downloader for user profiles and post histories of a Discourse website
     """
 
     user_list_html_filepath = None
@@ -25,7 +21,7 @@ class DiscourseDataDownloader():
         self.website_url = website_url
         self.dataset_folder = dataset_folder
 
-    def __call__(self, overwrite_user_list=False, overwrite_user_data=False):
+    def __call__(self, overwrite=False):
         """
         Download the html files for:
         - the user list
@@ -33,12 +29,11 @@ class DiscourseDataDownloader():
         - post histories
 
         Input:
-        :param overwrite_user_list: boolean, should the user list html file be overwritten
-        :param overwrite_user_data: boolean, should the user data html file be overwritten
+        :param overwrite: boolean, should the html files be overwritten.
         """
         # download data
-        self._download_user_list(overwrite_user_list)
-        self._download_user_data(overwrite_user_data)
+        self._download_user_list(overwrite)
+        self._download_user_data(overwrite)
 
         return self.user_list_html_filepath, self.user_profile_filepath_list, self.user_post_history_filepath_list
 
@@ -46,7 +41,7 @@ class DiscourseDataDownloader():
     # DOWNLOADERS:                                                                           #
     # ====================================================================================== #
 
-    def _download_user_list(self, overwrite_user_list=False):
+    def _download_user_list(self, overwrite=False):
         """
         Download the html files for the user list
         
@@ -57,11 +52,11 @@ class DiscourseDataDownloader():
         self.user_list_html_filepath = os.path.join(self.dataset_folder, "user_list.html")
         
         # check if file already exists
-        if Path(self.user_list_html_filepath).is_file() and not overwrite_user_list:
+        if Path(self.user_list_html_filepath).is_file() and not overwrite:
             # html file already exists, dont overwrite
             print("user_data_html already exists, skipping download")
         else:
-            if Path(self.user_list_html_filepath).is_file() and overwrite_user_list:
+            if Path(self.user_list_html_filepath).is_file() and overwrite:
                 # html file should be overwritten
                 print("downloading and overwriting user_data_html")
             if not Path(self.user_list_html_filepath).is_file():
@@ -71,9 +66,9 @@ class DiscourseDataDownloader():
             # download user list html from website and write to file
             user_list_url = self.website_url + "/u?period=all"
             user_list_html = self._get_html_from_url(user_list_url)
-            self._write_html_to_file(self.user_list_html_filepath, user_list_html, overwrite_user_list)
+            self._write_html_to_file(self.user_list_html_filepath, user_list_html, overwrite)
 
-    def _download_user_data(self, overwrite_user_data=False):
+    def _download_user_data(self, overwrite=False):
         """
         Download the html files for profiles and post histories
 
@@ -136,7 +131,7 @@ class DiscourseDataDownloader():
             print("( " + str(index+1) + " / " + str(len(user_links)) + " ): " + username )
 
             # check if files exist already
-            if Path(profile_filepath).is_file() and Path(post_history_filepath).is_file() and not overwrite_user_data:
+            if Path(profile_filepath).is_file() and Path(post_history_filepath).is_file() and not overwrite:
                 # dont overwrite:
                 print("files already exist, skipping download")
             else:    
@@ -144,14 +139,14 @@ class DiscourseDataDownloader():
                 print("downloading profile html...")
                 profile_html = self._get_html_from_url(profile_link)
                 if profile_html is not None: # check for connection
-                    self._write_html_to_file(profile_filepath, profile_html, overwrite_user_data)
+                    self._write_html_to_file(profile_filepath, profile_html, overwrite)
 
                 # post history:
                 post_history_link = profile_link + "/activity"
                 print("downloading post history html...")
                 post_history_html = self._get_html_from_url(post_history_link)
                 if post_history_html is not None: # check for connection
-                    self._write_html_to_file(post_history_filepath, post_history_html, overwrite_user_data)
+                    self._write_html_to_file(post_history_filepath, post_history_html, overwrite)
             
     # ====================================================================================== #
     # HTML HANDLERS:                                                                           #
@@ -207,7 +202,7 @@ class DiscourseDataDownloader():
         Input:
         :param filename: string, path to file
         :param html: html file, file that should be written to disk
-        :param overwrite: boolean, should the file be overwritten if it already exist
+        :param overwrite: boolean, should the file be overwritten if it already exists
         """
         if Path(filename).is_file() and not overwrite:
             # html file already exists, dont overwrite
