@@ -21,7 +21,7 @@ class DiscourseDownloader():
         self.website_url = website_url
         self.dataset_folder = dataset_folder
 
-    def __call__(self, overwrite=False):
+    def __call__(self, sleep_time, overwrite=False, supress_output=False):
         """
         Download the html files for:
         - the user list
@@ -31,9 +31,10 @@ class DiscourseDownloader():
         Input:
         :param overwrite: boolean, should the html files be overwritten.
         """
+
         # download data
-        self._download_user_list(overwrite)
-        self._download_user_data(overwrite)
+        self._download_user_list(sleep_time, overwrite, supress_output)
+        self._download_user_data(sleep_time, overwrite, supress_output)
 
         return self.user_list_html_filepath, self.user_profile_filepath_list, self.user_post_history_filepath_list
 
@@ -41,7 +42,7 @@ class DiscourseDownloader():
     # DOWNLOADERS:                                                                           #
     # ====================================================================================== #
 
-    def _download_user_list(self, overwrite=False):
+    def _download_user_list(self, sleep_time, overwrite=False, supress_output=False):
         """
         Download the html files for the user list
         
@@ -54,21 +55,21 @@ class DiscourseDownloader():
         # check if file already exists
         if Path(self.user_list_html_filepath).is_file() and not overwrite:
             # html file already exists, dont overwrite
-            print("user_data_html already exists, skipping download")
+            if not supress_output: print("user_data_html already exists, skipping download")
         else:
             if Path(self.user_list_html_filepath).is_file() and overwrite:
                 # html file should be overwritten
-                print("downloading and overwriting user_data_html")
+                if not supress_output: print("downloading and overwriting user_data_html")
             if not Path(self.user_list_html_filepath).is_file():
                 # html file not found
-                print("user_data_html not found, downloading...")
+                if not supress_output: print("user_data_html not found, downloading...")
 
             # download user list html from website and write to file
             user_list_url = self.website_url + "/u?period=all"
-            user_list_html = self._get_html_from_url(user_list_url)
+            user_list_html = self._get_html_from_url(user_list_url, sleep_time)
             self._write_html_to_file(self.user_list_html_filepath, user_list_html, overwrite)
 
-    def _download_user_data(self, overwrite=False):
+    def _download_user_data(self, sleep_time, overwrite=False, supress_output=False):
         """
         Download the html files for profiles and post histories
 
@@ -128,23 +129,23 @@ class DiscourseDownloader():
             self.user_post_history_filepath_list.append(post_history_filepath)
 
             # print progress update
-            print("( " + str(index+1) + " / " + str(len(user_links)) + " ): " + username )
+            if not supress_output: print("( " + str(index+1).zfill(4) + " / " + str(len(user_links)) + " ): " + username )
 
             # check if files exist already
             if Path(profile_filepath).is_file() and Path(post_history_filepath).is_file() and not overwrite:
                 # dont overwrite:
-                print("files already exist, skipping download")
+                if not supress_output: print("files already exist, skipping download")
             else:    
                 # profile:
-                print("downloading profile html...")
+                if not supress_output: print("downloading profile html...")
                 profile_html = self._get_html_from_url(profile_link)
                 if profile_html is not None: # check for connection
                     self._write_html_to_file(profile_filepath, profile_html, overwrite)
 
                 # post history:
                 post_history_link = profile_link + "/activity"
-                print("downloading post history html...")
-                post_history_html = self._get_html_from_url(post_history_link)
+                if not supress_output: print("downloading post history html...")
+                post_history_html = self._get_html_from_url(post_history_link, sleep_time)
                 if post_history_html is not None: # check for connection
                     self._write_html_to_file(post_history_filepath, post_history_html, overwrite)
             
@@ -152,7 +153,7 @@ class DiscourseDownloader():
     # HTML HANDLERS:                                                                           #
     # ====================================================================================== #
 
-    def _get_html_from_url(self, url):
+    def _get_html_from_url(self, url, sleep_time=1):
         """
         get the html file from a url with selenium including scrolling down
         """        
@@ -167,7 +168,7 @@ class DiscourseDownloader():
                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
                 # Wait to load the page.
-                time.sleep(1)
+                time.sleep(sleep_time)
 
                 # Calculate new scroll height and compare with last scroll height.
                 new_height = driver.execute_script("return document.body.scrollHeight")
