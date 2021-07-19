@@ -1,4 +1,4 @@
-import datetime
+from datetime import date
 
 class DiscourseDataset():
 
@@ -117,3 +117,20 @@ class DiscourseDataset():
         else: 
             # return unique list with key property from the posts
             list(set([post[key] for post in self.posts if key in post]))
+
+    def __str__(self):
+        def _convert_timestamps_to_datetime(dict_list):
+            new_dict_list = dict_list.copy()
+            
+            timestamp_keys = ['post_timestamp', 'join_timestamp', 'last_post_timestamp']
+            datetime_keys = ['post_time', 'join_time', 'last_post_time']
+            
+            for post in dict_list:
+                for timestamp_key, datetime_key in zip(timestamp_keys, datetime_keys):
+                    post[datetime_key] = date.fromtimestamp(post[timestamp_key])
+                    post.pop(datetime_key)
+
+            return new_dict_list
+
+        return str(_convert_timestamps_to_datetime(self.posts))
+        
