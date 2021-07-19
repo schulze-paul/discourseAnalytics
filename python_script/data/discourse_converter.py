@@ -4,7 +4,7 @@ import json
 import io
 import os
 import re
-from tqdm import tqdm
+from tqdm.notebook import tqdm
 
 class DiscourseConverter():
     """
@@ -16,7 +16,7 @@ class DiscourseConverter():
     user_profile_json_filepath_list = []
     user_post_history_json_filepath_list = []
 
-    def __init__(self, website_url, dataset_folder="datasets/Discourse/json_files"):
+    def __init__(self, website_url, dataset_folder=os.path.join("datasets","Discourse","json_files")):
         self.website_url = website_url
         self.dataset_folder = dataset_folder
         
@@ -39,8 +39,6 @@ class DiscourseConverter():
 
     def _convert_user_profiles(self, user_profile_html_filepath_list, overwrite=False, supress_output=True):
         
-        print("saving user profiles json:")
-
         def get_username_from_filepath(filepath):
             result = re.search(r'(profiles\\)\w+',  filepath)
             return result.group(0)[9:len(filepath)-6]
@@ -57,7 +55,9 @@ class DiscourseConverter():
 
         def get_member_status(profile_soup):
             member_status_h3 = profile_soup.find('h3')
-            return member_status_h3.get_text()
+            member_status = member_status_h3.get_text()
+            if member_status != "Member" or "Director":
+                return "Not Member"
 
         def get_join_time(profile_soup):
             secondary_div = profile_soup.find('div', {'class': 'secondary'})
@@ -77,11 +77,11 @@ class DiscourseConverter():
                     return div.find('span').get('data-time')
             return None
         
-        for index, profile_html_filepath in enumerate(tqdm(user_profile_html_filepath_list)):
+        for index, profile_html_filepath in enumerate(tqdm(user_profile_html_filepath_list, desc="saving user profiles json")):
             
             username = get_username_from_filepath(profile_html_filepath)
 
-            profile_json_filepath = self.dataset_folder + "/profiles/" + username + ".json"
+            profile_json_filepath = os.path.join(self.dataset_folder, "profiles", username + ".json")
             self.user_profile_json_filepath_list.append(profile_json_filepath) # save filepath
             
             # print progress update
@@ -104,7 +104,11 @@ class DiscourseConverter():
                     profile_dict['full_name'] = get_full_name(profile_soup)
                     profile_dict['member_status'] = get_member_status(profile_soup)
                     profile_dict['join_timestamp'] = get_join_time(profile_soup)
-                    profile_dict['last_post_timestamp'] = get_last_post_time(profile_soup)
+                    if get_last_post_time(profile_soup) is not None:
+                        profile_dict['last_post_timestamp'] = get_last_post_time(profile_soup)
+                    else:
+                        profile_dict['empty'] = True
+
                 else:
                     profile_dict['username'] = username
                     profile_dict['empty'] = True
@@ -113,8 +117,6 @@ class DiscourseConverter():
 
     def _convert_post_histories(self, user_post_history_html_filepath_list, overwrite=False, supress_output=True):
         
-        print("saving post histories json:")
-
         def get_username_from_filepath(filepath):
             result = re.search(r'(post_histories\\)\w+',  filepath)
             return result.group(0)[15:len(filepath)-6]
@@ -139,11 +141,11 @@ class DiscourseConverter():
             excerpt_p = post_soup.find('p', {'class': 'excerpt'})
             return excerpt_p.get_text()
 
-        for index, post_history_html_filepath in enumerate(tqdm(user_post_history_html_filepath_list)):
+        for index, post_history_html_filepath in enumerate(tqdm(user_post_history_html_filepath_list, desc='saving post histories json')):
             
             username = get_username_from_filepath(post_history_html_filepath)
 
-            post_history_json_filepath = self.dataset_folder + "/post_histories/" + username + ".json"
+            post_history_json_filepath = os.path.join(self.dataset_folder, "post_histories", username + ".json")
             self.user_post_history_json_filepath_list.append(post_history_json_filepath) # save filepath
             
             # print progress update
@@ -163,7 +165,7 @@ class DiscourseConverter():
 
                 # check if profile is empty
                 if all_posts_soup is not None:
-                    for post_soup in all_posts_soup:
+                    for post_soup in tqdm(all_posts_soup, leave=False):
                         post_dict = {}
                         post_dict['username'] = username
                         post_dict['topic'] = get_post_topic(post_soup)
