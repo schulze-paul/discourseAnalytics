@@ -13,7 +13,12 @@ class DiscourseDataLoader():
 
 
     def __call__(self, profiles_json_list, post_histories_json_list):
-        
+        # loads the data from json files into memory
+
+        # sorting both lists by alphabet to ensure correct sequencing
+        profiles_json_list = profiles_json_list.sort()
+        post_histories_json_list = post_histories_json_list.sort()
+
         for profile_path in profiles_json_list:
             with open(profile_path) as jsonFile:
                 profile = json.load(jsonFile)
