@@ -4,6 +4,7 @@ import json
 import io
 import os
 import re
+from tqdm import tqdm
 
 class DiscourseConverter():
     """
@@ -38,7 +39,7 @@ class DiscourseConverter():
 
     def _convert_user_profiles(self, user_profile_html_filepath_list, overwrite=False, supress_output=True):
         
-        if not supress_output: print("converting user profiles:")
+        print("saving user profiles json:")
 
         def get_username_from_filepath(filepath):
             result = re.search(r'(profiles\\)\w+',  filepath)
@@ -76,7 +77,7 @@ class DiscourseConverter():
                     return div.find('span').get('data-time')
             return None
         
-        for index, profile_html_filepath in enumerate(user_profile_html_filepath_list):
+        for index, profile_html_filepath in enumerate(tqdm(user_profile_html_filepath_list)):
             
             username = get_username_from_filepath(profile_html_filepath)
 
@@ -102,8 +103,8 @@ class DiscourseConverter():
                     profile_dict['username'] = get_username(profile_soup)                
                     profile_dict['full_name'] = get_full_name(profile_soup)
                     profile_dict['member_status'] = get_member_status(profile_soup)
-                    profile_dict['join_time'] = get_join_time(profile_soup)
-                    profile_dict['last_post_time'] = get_last_post_time(profile_soup)
+                    profile_dict['join_timestamp'] = get_join_time(profile_soup)
+                    profile_dict['last_post_timestamp'] = get_last_post_time(profile_soup)
                 else:
                     profile_dict['username'] = username
                     profile_dict['empty'] = True
@@ -112,7 +113,7 @@ class DiscourseConverter():
 
     def _convert_post_histories(self, user_post_history_html_filepath_list, overwrite=False, supress_output=True):
         
-        if not supress_output: print("converting post_histories:")
+        print("saving post histories json:")
 
         def get_username_from_filepath(filepath):
             result = re.search(r'(post_histories\\)\w+',  filepath)
@@ -138,7 +139,7 @@ class DiscourseConverter():
             excerpt_p = post_soup.find('p', {'class': 'excerpt'})
             return excerpt_p.get_text()
 
-        for index, post_history_html_filepath in enumerate(user_post_history_html_filepath_list):
+        for index, post_history_html_filepath in enumerate(tqdm(user_post_history_html_filepath_list)):
             
             username = get_username_from_filepath(post_history_html_filepath)
 
@@ -168,7 +169,7 @@ class DiscourseConverter():
                         post_dict['topic'] = get_post_topic(post_soup)
                         post_dict['topic_link'] = self.website_url + get_post_topic_link(post_soup)
                         post_dict['category'] = get_post_category(post_soup)
-                        post_dict['time'] = get_post_time(post_soup)
+                        post_dict['post_timestamp'] = get_post_time(post_soup)
                         post_dict['text'] = get_post_text(post_soup)
 
                         post_history_list.append(post_dict)

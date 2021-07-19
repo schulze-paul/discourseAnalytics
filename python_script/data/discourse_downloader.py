@@ -5,6 +5,7 @@ import os
 import re
 from pathlib import Path
 from bs4 import BeautifulSoup as soup
+from tqdm import tqdm
 
 
 class DiscourseDownloader():
@@ -77,6 +78,7 @@ class DiscourseDownloader():
         :param overwrite_user_data: boolean, should the user data html file be overwritten
         """
 
+        print("downloading user data:")
 
         def get_user_links(user_list_html):
             """
@@ -117,7 +119,7 @@ class DiscourseDownloader():
             user_links = get_user_links(user_list_html)
 
         # go through each profile link and download the profile html and the post history html        
-        for index, profile_link in enumerate(user_links):
+        for index, profile_link in enumerate(tqdm(user_links)):
             
             # get user name and file names
             username = get_user_name_from_profile_link(profile_link)
