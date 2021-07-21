@@ -46,16 +46,16 @@ class DiscourseConverter():
         def get_username(profile_soup):
             username_h1 = profile_soup.find('h1', {'class': 'username'})
             if username_h1 is None: return None
-            username_with_whitespace = username_h1.get_text()
+            username_with_whitespace = username_h1.find(text=True, recursive=False)
             return username_with_whitespace.replace(" ", "")
 
         def get_full_name(profile_soup):
             full_name_h2 = profile_soup.find('h2', {'class': 'full-name'})
-            return full_name_h2.get_text()
+            return full_name_h2.find(text=True, recursive=False)
 
         def get_member_status(profile_soup):
             member_status_h3 = profile_soup.find('h3')
-            member_status = member_status_h3.get_text()
+            member_status = member_status_h3.find(text=True, recursive=False)
             if member_status != "Member" or "Director":
                 return "Not Member"
 
@@ -64,7 +64,7 @@ class DiscourseConverter():
             if secondary_div is None: return None
             divs_in_secondary_div = secondary_div.find_all('div')
             for div in divs_in_secondary_div:
-                if div.find('dt').get_text() == "Joined":
+                if div.find('dt').find(text=True, recursive=False) == "Joined":
                     return div.find('span').get('data-time')
             return None
 
@@ -73,7 +73,7 @@ class DiscourseConverter():
             if secondary_div is None: return None
             divs_in_secondary_div = secondary_div.find_all('div')
             for div in divs_in_secondary_div:
-                if div.find('dt').get_text() == "Last Post":
+                if div.find('dt').find(text=True, recursive=False) == "Last Post":
                     return div.find('span').get('data-time')
             return None
         
@@ -103,7 +103,8 @@ class DiscourseConverter():
                     profile_dict['username'] = get_username(profile_soup)                
                     profile_dict['full_name'] = get_full_name(profile_soup)
                     profile_dict['member_status'] = get_member_status(profile_soup)
-                    profile_dict['join_timestamp'] = get_join_time(profile_soup)
+                    if get_join_time(profile_soup) is not None:
+                        profile_dict['join_timestamp'] = get_join_time(profile_soup)
                     if get_last_post_time(profile_soup) is not None:
                         profile_dict['last_post_timestamp'] = get_last_post_time(profile_soup)
                     else:
@@ -123,7 +124,7 @@ class DiscourseConverter():
 
         def get_post_topic(post_soup):
             title_span = post_soup.find('span', {'class': 'title'})
-            return title_span.find('a').get_text()
+            return title_span.find('a').find(text=True, recursive=False)
 
         def get_post_topic_link(post_soup):
             title_span = post_soup.find('span', {'class': 'title'})
@@ -131,7 +132,7 @@ class DiscourseConverter():
 
         def get_post_category(post_soup):
             category_span = post_soup.find('span', {'class': 'category-name'})
-            return category_span.get_text()
+            return category_span.find(text=True, recursive=False)
 
         def get_post_time(post_soup):
             time_span = post_soup.find('span', {'class':'relative-date date'})
@@ -139,7 +140,7 @@ class DiscourseConverter():
 
         def get_post_text(post_soup):
             excerpt_p = post_soup.find('p', {'class': 'excerpt'})
-            return excerpt_p.get_text()
+            return excerpt_p.find(text=True, recursive=False)
 
         for index, post_history_html_filepath in enumerate(tqdm(user_post_history_html_filepath_list, desc='saving post histories json')):
             
@@ -165,7 +166,7 @@ class DiscourseConverter():
 
                 # check if profile is empty
                 if all_posts_soup is not None:
-                    for post_soup in tqdm(all_posts_soup, leave=False):
+                    for post_soup in tqdm(all_posts_soup, leave=False, desc=username):
                         post_dict = {}
                         post_dict['username'] = username
                         post_dict['topic'] = get_post_topic(post_soup)
