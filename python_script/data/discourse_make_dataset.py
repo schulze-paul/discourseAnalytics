@@ -26,25 +26,12 @@ class MakeDataset():
         
 
         self.dataLoader = DiscourseDataLoader()
-        profiles, post_histories = self.dataLoader(profiles_json, post_histories_json)
+        all_posts = self.dataLoader(profiles_json, post_histories_json)
         
-        all_posts = self._combine_profiles_and_post_histories(profiles, post_histories)
         dataset = DiscourseDataset(all_posts)
 
         return dataset
 
-    def _combine_profiles_and_post_histories(self, profiles, post_histories):
-        # set all the information about the poster/profile in each dict of each post of that poster / profile
-        
-        assert len(profiles) == len(post_histories)
-        all_posts = []
-        for profile, post_history in zip(profiles, post_histories):
-            for post in post_history:
-                assert(post['username'] == post['username'])
-                post.update(profile)
-                all_posts.append(post)
-
-        return all_posts
-
+    
 
         
