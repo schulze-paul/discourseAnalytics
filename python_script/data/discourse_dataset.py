@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 class DiscourseDataset():
 
@@ -19,7 +19,8 @@ class DiscourseDataset():
                post_before=None,
                post_after=None,
                text=None,
-               category = None
+               category = None,
+               empty=None
                ):
         """
         
@@ -65,17 +66,24 @@ class DiscourseDataset():
 
         arguments = [username, 
                      full_name, 
-                     datetime.timestamp(join_before), 
-                     datetime.timestamp(join_after), 
-                     datetime.timestamp(last_post_before), 
-                     datetime.timestamp(last_post_after), 
+                     join_before, 
+                     join_after, 
+                     last_post_before, 
+                     last_post_after, 
                      member_status, 
                      topic, 
                      topic_link, 
-                     datetime.timestamp(post_before), 
-                     datetime.timestamp(post_after),
+                     post_before, 
+                     post_after,
                      text,
-                     category]
+                     category,
+                     empty]
+        time_arguments = [join_before, 
+                          join_after, 
+                          last_post_before, 
+                          last_post_after, 
+                          post_before, 
+                          post_after]
 
         keys = ['username',
                 'full_name', 
@@ -89,13 +97,24 @@ class DiscourseDataset():
                 'post_before', 
                 'post_after',
                 'text',
-                'category']
-            
+                'category',
+                'empty']
+        time_keys = ['join_before', 
+                     'join_after', 
+                     'last_post_before', 
+                     'last_post_after', 
+                     'post_before', 
+                     'post_after']
+    
         # build dict to search for 
         dict_to_search_for = {}
-        for argument, key in arguments, keys:
+        for argument, key in zip(arguments, keys):
             if argument is not None:
                 dict_to_search_for[key] = argument
+        # convert datetime objects to timestamps
+        for argument, key in zip(time_arguments, time_keys):
+            if argument is not None:
+                dict_to_search_for[key] = datetime.timestamp(argument)
 
         # filter posts
         filtered_posts = search_for(dict_to_search_for, self.posts)
@@ -110,25 +129,31 @@ class DiscourseDataset():
         return len(self.posts)
 
     def __getitem__(self, key):
-        if isinstance(key, int):
+        if isinstance(key, int) or isinstance(key, slice):
             # if key is integer, return item from list
             return self.posts[key]
 
         else: 
             # return unique list with key property from the posts
-            list(set([post[key] for post in self.posts if key in post]))
+            return list(set([post[key] for post in self.posts if key in post]))
 
     def __str__(self):
+
+
         def _convert_timestamps_to_datetime(dict_list):
+            # printing datetime objects instead of timestamp
             new_dict_list = dict_list.copy()
-            
+            print("converting")
+
             timestamp_keys = ['post_timestamp', 'join_timestamp', 'last_post_timestamp']
             datetime_keys = ['post_time', 'join_time', 'last_post_time']
             
-            for post in dict_list:
+            for post in new_dict_list:
                 for timestamp_key, datetime_key in zip(timestamp_keys, datetime_keys):
-                    post[datetime_key] = date.fromtimestamp(post[timestamp_key])
-                    post.pop(datetime_key)
+                    post[datetime_key] = datetime.fromtimestamp(post[timestamp_key]/1000)
+                    print(post[datetime_key])
+                    post.pop(timestamp_key)
+                
 
             return new_dict_list
 
