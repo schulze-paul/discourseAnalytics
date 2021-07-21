@@ -105,8 +105,8 @@ class DiscourseDownloader():
             return user_link_list
 
         def get_user_name_from_profile_link(profile_link):
-            result = re.search("(\/u\/)\w+",  profile_link)
-            return result.group(0)[3:]
+            return profile_link[46:]
+            
 
         # get the links to the profiles first
         if self.user_list_html_filepath is None:
@@ -138,14 +138,14 @@ class DiscourseDownloader():
             else:    
                 # profile:
                 if not supress_output: print("downloading profile html...")
-                profile_html = self._get_html_from_url(profile_link)
+                profile_html = self._get_html_from_url(self.website_url + profile_link)
                 if profile_html is not None: # check for connection
                     self._write_html_to_file(profile_filepath, profile_html, overwrite)
 
                 # post history:
                 post_history_link = profile_link + "/activity"
                 if not supress_output: print("downloading post history html...")
-                post_history_html = self._get_html_from_url(post_history_link, sleep_time)
+                post_history_html = self._get_html_from_url(self.website_url + post_history_link, sleep_time)
                 if post_history_html is not None: # check for connection
                     self._write_html_to_file(post_history_filepath, post_history_html, overwrite)
             
@@ -185,9 +185,11 @@ class DiscourseDownloader():
 
         # start chrome browser
         driver = webdriver.Chrome("C:/Users/Thesis/chromedriver/chromedriver.exe", chrome_options=options)
+        print(url)
         try:
             driver.get(url)
-        except:
+        except Exception as e:
+            print(e)
             print("chromedriver could not get page, skipping to next")
             return None
         scroll_down(driver)
