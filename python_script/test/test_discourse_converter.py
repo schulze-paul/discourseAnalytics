@@ -65,7 +65,7 @@ class TestDiscourseConverter(unittest.TestCase):
         post_1 = {}
         post_1['username'] = "Matt_Cliffe"
         post_1['topic'] = "Joining"
-        post_1['topic_link'] = "link.com"
+        post_1['topic_link'] = self.converter.website_url + "/t/joining-space/12505"
         post_1['category'] = "Admin"
         post_1['post_timestamp'] = "1550859165213"
         post_1['text'] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."

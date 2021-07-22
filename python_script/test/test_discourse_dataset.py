@@ -51,7 +51,7 @@ class TestDiscourseDataset(unittest.TestCase):
 
     def test_print_table(self):
         print("")
-        self.dataset.print_table()
+        print(self.dataset)
     
     def test_call(self):
         print("")
