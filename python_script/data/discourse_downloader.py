@@ -34,8 +34,10 @@ class DiscourseDownloader():
         """
 
         # download data
+        self._start_chrome_browser()
         self._download_user_list(sleep_time, overwrite, supress_output)
         self._download_user_data(sleep_time, overwrite, supress_output)
+        self._quit_chrome_browser()
 
         return self.user_list_html_filepath, self.user_profile_filepath_list, self.user_post_history_filepath_list
 
@@ -69,7 +71,7 @@ class DiscourseDownloader():
             user_list_url = self.website_url + "/u?period=all"
             user_list_html = self._get_html_from_url(user_list_url, sleep_time)
             self._write_html_to_file(self.user_list_html_filepath, user_list_html, overwrite)
-
+            
     def _download_user_data(self, sleep_time, overwrite=False, supress_output=False):
         """
         Download the html files for profiles and post histories
@@ -105,7 +107,7 @@ class DiscourseDownloader():
             return user_link_list
 
         def get_user_name_from_profile_link(profile_link):
-            return profile_link[46:]
+            return profile_link[3:]
             
 
         # get the links to the profiles first
@@ -150,51 +152,55 @@ class DiscourseDownloader():
                     self._write_html_to_file(post_history_filepath, post_history_html, overwrite)
             
     # ====================================================================================== #
-    # HTML HANDLERS:                                                                           #
+    # HTML HANDLER / DRIVER:                                                                           #
     # ====================================================================================== #
 
-    def _get_html_from_url(self, url, sleep_time=1):
-        """
-        get the html file from a url with selenium including scrolling down
-        """        
-        def scroll_down(driver):
+    def _start_chrome_browser(self):
+        # prepare the options for the chrome driver
+        options = webdriver.ChromeOptions()
+        options.add_argument('headless')
+        options.add_experimental_option('excludeSwitches', ['enable-logging'])
+
+        # start chrome browser
+        self.driver = webdriver.Chrome("C:/Users/Thesis/chromedriver/chromedriver.exe", options=options)
+        
+    def _quit_chrome_browser(self):
+        self.driver.quit()
+
+    def _scroll_down(self, sleep_time):
             """A method for scrolling the page."""
 
             # Get scroll height.
-            last_height = driver.execute_script("return document.body.scrollHeight")
+            last_height = self.driver.execute_script("return document.body.scrollHeight")
                 
             while True:
                 # Scroll down to the bottom.
-                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
                 # Wait to load the page.
                 time.sleep(sleep_time)
 
                 # Calculate new scroll height and compare with last scroll height.
-                new_height = driver.execute_script("return document.body.scrollHeight")
+                new_height = self.driver.execute_script("return document.body.scrollHeight")
                 if new_height == last_height:
 
                     break
 
                 last_height = new_height
 
-        # prepare the option for the chrome driver
-        options = webdriver.ChromeOptions()
-        options.add_argument('headless')
-        options.add_experimental_option('excludeSwitches', ['enable-logging'])
-
-        # start chrome browser
-        driver = webdriver.Chrome("C:/Users/Thesis/chromedriver/chromedriver.exe", chrome_options=options)
-        print(url)
+    def _get_html_from_url(self, url, sleep_time=1):
+        """
+        get the html file from a url with selenium including scrolling down
+        """        
         try:
-            driver.get(url)
+            self.driver.get(url)
         except Exception as e:
             print(e)
             print("chromedriver could not get page, skipping to next")
             return None
-        scroll_down(driver)
-        html = driver.page_source
-        driver.quit()
+        self._scroll_down(sleep_time)
+        html = self.driver.page_source
+        
 
         return html
 
