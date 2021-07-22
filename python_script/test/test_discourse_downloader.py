@@ -7,35 +7,35 @@ from pathlib import Path
 
 class TestDiscourseDownloader(unittest.TestCase):
     
-
     def setUp(self):
-        # testing folder
-        self.testing_folder = os.path.join("python_script","test")
-        
-        # folder with the prepared html files
-        self.html_folder = os.path.join(self.testing_folder, "test_discourse_downloader")
-        
-        # temporary folder
-        self.temp_folder = os.path.join(self.testing_folder,"temp")
 
-        # folder where the html files will be downloaded to
-        self.download_folder = os.path.join(self.testing_folder,"temp","html_files")
-        self.download_folder_profiles = os.path.join(self.testing_folder,"temp","html_files", "profiles")
-        self.download_folder_post_histories = os.path.join(self.testing_folder,"temp","html_files", "post_histories")
-        # create download folders
-        os.makedirs(self.download_folder)
-        os.makedirs(self.download_folder_profiles)
-        os.makedirs(self.download_folder_post_histories)
+        def set_up_folders(self):
+            # testing folder
+            self.testing_folder = os.path.join("python_script","test")
+            
+            # folder with the prepared html files
+            self.html_folder = os.path.join(self.testing_folder, "test_discourse_downloader")
+            
+            # temporary folder
+            self.temp_folder = os.path.join(self.testing_folder,"temp")
 
+            # folder where the html files will be downloaded to
+            self.download_folder = os.path.join(self.testing_folder,"temp","html_files")
+            self.download_folder_profiles = os.path.join(self.download_folder, "profiles")
+            self.download_folder_post_histories = os.path.join(self.download_folder, "post_histories")
+            # create download folders
+            os.makedirs(self.download_folder_profiles)
+            os.makedirs(self.download_folder_post_histories)
+
+        set_up_folders(self)
+        
         self.downloader = DiscourseDownloader(WEBSITE_URL, dataset_folder=self.download_folder)
 
         # start browser
         self.downloader._start_chrome_browser()
 
-
     def test_get_html_from_url(self):
         self.downloader._get_html_from_url(self.downloader.website_url, sleep_time=0)
-    
     
     def test_download_user_list(self):
         # TODO: i dont know how to test this method other than this
@@ -58,6 +58,29 @@ class TestDiscourseDownloader(unittest.TestCase):
             
             # test file contents
             self.assertFalse(os.stat(file).st_size == 0)
+
+    def test_overwriting(self):
+        
+        filepath = os.path.join(self.download_folder, "overwrite_test.html")
+        # write an html file
+        self.downloader._write_html_to_file(filepath, "not overwritten")
+        # write again to same file, no overwriting
+        self.downloader._write_html_to_file(filepath, "overwritten")
+        # load file contents
+        html = open(filepath, 'rb')
+        html_string = html.read()
+        self.assertEqual(html_string.decode("utf-8") , "not overwritten")
+        html.close()
+
+        # write again to same file, overwriting
+        self.downloader._write_html_to_file(filepath, "overwritten", overwrite=True)
+        # load file contents
+        html = open(filepath, 'rb')
+        html_string = html.read()
+        self.assertEqual(html_string.decode("utf-8") , "overwritten")
+        html.close()
+
+        # 
 
     def tearDown(self):
         # remove contents of download folder
