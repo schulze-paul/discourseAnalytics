@@ -34,6 +34,7 @@ class DiscourseDownloader():
         """
 
         # download data
+        self._set_up_folders()
         self._start_chrome_browser()
         self._download_user_list(sleep_time, overwrite, supress_output)
         self._download_user_data(sleep_time, overwrite, supress_output)
@@ -154,6 +155,12 @@ class DiscourseDownloader():
     # ====================================================================================== #
     # HTML HANDLER / DRIVER:                                                                           #
     # ====================================================================================== #
+
+    def _set_up_folders(self):
+        html_folder_profiles = os.path.join(self.dataset_folder, "profiles")
+        html_folder_post_histories = os.path.join(self.dataset_folder, "post_histories")
+        os.makedirs(html_folder_profiles)
+        os.makedirs(html_folder_post_histories)
 
     def _start_chrome_browser(self):
         # prepare the options for the chrome driver

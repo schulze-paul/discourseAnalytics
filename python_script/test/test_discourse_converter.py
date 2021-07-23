@@ -18,22 +18,19 @@ class TestDiscourseConverter(unittest.TestCase):
             # output files folder:
             self.temp_folder = os.path.join(self.testing_folder, "temp")
             self.json_folder = os.path.join(self.temp_folder, "json_files")
-            self.json_folder_profiles = os.path.join(self.temp_folder, "json_files", "profiles")
-            self.json_folder_post_histories = os.path.join(self.temp_folder, "json_files", "post_histories")
-            # create output folders
-            os.makedirs(self.json_folder_profiles)
-            os.makedirs(self.json_folder_post_histories)
 
+            
         # set up folders 
         set_up_folders(self)
         self.converter = DiscourseConverter(WEBSITE_URL, dataset_folder=self.json_folder)
+        self.converter._set_up_folders()
 
     def test_convert_user_profiles(self):
         profiles_html = [os.path.join(self.html_folder, "profiles", "Matt_Cliffe.html")]
         self.converter._convert_user_profiles(profiles_html)
         
         # test filenames
-        out_files = [os.path.join(self.json_folder_profiles, "Matt_Cliffe.json")]
+        out_files = [os.path.join(self.json_folder, "profiles", "Matt_Cliffe.json")]
         for file in out_files:
             self.assertTrue(Path(file).is_file())
             
@@ -56,7 +53,7 @@ class TestDiscourseConverter(unittest.TestCase):
         self.converter._convert_post_histories(post_histories_html)
         
         # test filenames
-        out_files = [os.path.join(self.json_folder_post_histories, "Matt_Cliffe.json")]
+        out_files = [os.path.join(self.json_folder, "post_histories", "Matt_Cliffe.json")]
         for file in out_files:
             self.assertTrue(Path(file).is_file())
             

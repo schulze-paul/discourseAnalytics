@@ -21,17 +21,13 @@ class TestDiscourseDownloader(unittest.TestCase):
 
             # folder where the html files will be downloaded to
             self.download_folder = os.path.join(self.testing_folder,"temp","html_files")
-            self.download_folder_profiles = os.path.join(self.download_folder, "profiles")
-            self.download_folder_post_histories = os.path.join(self.download_folder, "post_histories")
-            # create download folders
-            os.makedirs(self.download_folder_profiles)
-            os.makedirs(self.download_folder_post_histories)
 
         set_up_folders(self)
         
         self.downloader = DiscourseDownloader(WEBSITE_URL, dataset_folder=self.download_folder)
 
         # start browser
+        self.downloader._set_up_folders()
         self.downloader._start_chrome_browser()
 
     def test_get_html_from_url(self):
