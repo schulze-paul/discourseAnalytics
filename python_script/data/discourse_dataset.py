@@ -4,7 +4,7 @@ from python_script.data.discourse_data_loader import DiscourseDataLoader
 import os
 from datetime import date, datetime
 import numpy as np
-
+import sys
 
 
 class DiscourseDataset():
@@ -29,7 +29,7 @@ class DiscourseDataset():
             posts = first_argument
 
         # sort posts by post times
-        sorted_posts = sorted(posts, key=lambda p: p['post_timestamp'])
+        sorted_posts = sorted(posts, key=lambda p: p.get('post_timestamp', sys.maxsize))
         self.posts = sorted_posts
 
     def __call__(self, 
@@ -229,3 +229,15 @@ class DiscourseDataset():
         all_posts = dataLoader(profiles_json, post_histories_json)
 
         return all_posts
+
+    def find(self, text=None, topic=None):
+        pass
+
+
+
+
+from python_script.data.website_base_data import WEBSITE_URL
+
+
+if __name__ == '__main__':
+    dataset = DiscourseDataset(WEBSITE_URL)
