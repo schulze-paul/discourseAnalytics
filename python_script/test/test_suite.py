@@ -2,6 +2,7 @@ import unittest
 from python_script.test.test_discourse_downloader import TestDiscourseDownloader
 from python_script.test.test_discourse_converter import TestDiscourseConverter
 from python_script.test.test_discourse_data_loader import TestDiscourseDataLoader
+from python_script.test.test_discourse_dataset import TestDiscourseDataset
 
 
 def all_tests_suite():
@@ -18,6 +19,9 @@ def all_tests_suite():
     
     suite.addTest(TestDiscourseDataLoader('test_timestamps_to_integer'))
     suite.addTest(TestDiscourseDataLoader('test_call'))
+    
+    suite.addTest(TestDiscourseDataset('test_print_table'))
+    suite.addTest(TestDiscourseDataset('test_call'))
     
     return suite
 
