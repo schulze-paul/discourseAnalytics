@@ -40,8 +40,11 @@ class DiscourseConverter():
     def _convert_user_profiles(self, user_profile_html_filepath_list, overwrite=False, supress_output=True):
         
         def get_username_from_filepath(filepath):
-            result = re.search(r'(profiles\\)\w+',  filepath)
-            return result.group(0)[9:len(filepath)-6]
+            position = re.search("profiles", filepath).start()
+            
+            username = filepath[position + len("profiles") + 1: len(filepath) - len(".html")]
+            print(username)
+            return username
 
         def get_username(profile_soup):
             username_h1 = profile_soup.find('h1', {'class': 'username'})
@@ -119,8 +122,11 @@ class DiscourseConverter():
     def _convert_post_histories(self, user_post_history_html_filepath_list, overwrite=False, supress_output=True):
         
         def get_username_from_filepath(filepath):
-            result = re.search(r'(post_histories\\)\w+',  filepath)
-            return result.group(0)[15:len(filepath)-6]
+            position = re.search("post_histories", filepath).start()
+            
+            username = filepath[position + len("post_histories") + 1: len(filepath) - len(".html")]
+            print(username)
+            return username
 
         def get_post_topic(post_soup):
             title_span = post_soup.find('span', {'class': 'title'})
