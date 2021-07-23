@@ -28,6 +28,7 @@ class DiscourseConverter():
         Input:
         :param overwrite: boolean, should the json files be overwritten.    
         """
+        self._set_up_folders()
         self._convert_user_profiles(user_profile_html_filepath_list, overwrite, supress_output)
         self._convert_post_histories(user_post_history_html_filepath_list, overwrite, supress_output)
 
