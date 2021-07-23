@@ -71,7 +71,8 @@ class DiscourseDownloader():
             # download user list html from website and write to file
             user_list_url = self.website_url + "/u?period=all"
             user_list_html = self._get_html_from_url(user_list_url, sleep_time)
-            self._write_html_to_file(self.user_list_html_filepath, user_list_html, overwrite)
+            if user_list_html is not None:
+                self._write_html_to_file(self.user_list_html_filepath, user_list_html, overwrite)
             
     def _download_user_data(self, sleep_time, overwrite=False, supress_output=False):
         """
@@ -159,8 +160,10 @@ class DiscourseDownloader():
     def _set_up_folders(self):
         html_folder_profiles = os.path.join(self.dataset_folder, "profiles")
         html_folder_post_histories = os.path.join(self.dataset_folder, "post_histories")
-        os.makedirs(html_folder_profiles)
-        os.makedirs(html_folder_post_histories)
+        if not Path(html_folder_profiles).is_file():
+            os.makedirs(html_folder_profiles)
+        if not Path(html_folder_post_histories).is_file():
+            os.makedirs(html_folder_post_histories)
 
     def _start_chrome_browser(self):
         # prepare the options for the chrome driver
@@ -208,8 +211,11 @@ class DiscourseDownloader():
         self._scroll_down(sleep_time)
         html = self.driver.page_source
         
-
-        return html
+        if html != "<html><head></head><body></body></html>":
+            return html
+        else:
+            print("chromedriver could not get page, skipping to next")
+            return None
 
     def _write_html_to_file(self, filename, html, overwrite=False):
         """

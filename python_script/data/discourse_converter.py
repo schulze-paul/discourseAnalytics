@@ -191,8 +191,10 @@ class DiscourseConverter():
     def _set_up_folders(self):
         json_folder_profiles = os.path.join(self.dataset_folder, "profiles")
         json_folder_post_histories = os.path.join(self.dataset_folder, "post_histories")
-        os.makedirs(json_folder_profiles)
-        os.makedirs(json_folder_post_histories)
+        if not Path(json_folder_profiles).is_file():
+            os.makedirs(json_folder_profiles)
+        if not Path(json_folder_post_histories).is_file():
+            os.makedirs(json_folder_post_histories)
 
     def _write_data_to_json_file(self, filename, data, overwrite):
         """
