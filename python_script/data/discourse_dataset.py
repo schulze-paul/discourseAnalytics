@@ -1,10 +1,33 @@
+from python_script.data.discourse_downloader import DiscourseDownloader
+from python_script.data.discourse_converter import DiscourseConverter
+from python_script.data.discourse_data_loader import DiscourseDataLoader
+import os
 from datetime import date, datetime
 import numpy as np
 
 
+
 class DiscourseDataset():
 
-    def __init__(self, posts):
+    def __init__(self,
+                 first_argument,
+                 dataset_folder=os.path.join("datasets","Discourse"),
+                 supress_output=True,
+                 overwrite_html=False,
+                 overwrite_json=False,
+                 sleep_time=1
+                 ):
+
+        # initialize with downloader
+        if type(first_argument) is str:
+            website_url = first_argument
+            # download html files and json files and make posts dataset
+            posts = self._make_dataset(website_url, dataset_folder=dataset_folder, supress_output=supress_output, overwrite_html=overwrite_html, overwrite_json=overwrite_json, sleep_time=sleep_time) 
+        
+        # initialize with posts
+        if type(first_argument) is list:
+            posts = first_argument
+
         # sort posts by post times
         sorted_posts = sorted(posts, key=lambda p: p['post_timestamp'])
         self.posts = sorted_posts
@@ -186,3 +209,23 @@ class DiscourseDataset():
     def __eq__(self, obj):
         return self.posts == obj.posts
 
+    @staticmethod
+    def _make_dataset(website_url,
+                 dataset_folder=os.path.join("datasets","Discourse"),
+                 supress_output=True,
+                 overwrite_html=False,
+                 overwrite_json=False,
+                 sleep_time=1
+                 ):
+
+        downloader = DiscourseDownloader(website_url, dataset_folder=dataset_folder + "\html_files")
+        _, profiles_html, post_histories_html = downloader(sleep_time=sleep_time, overwrite=overwrite_html, supress_output = supress_output)
+        
+        converter = DiscourseConverter(website_url, dataset_folder=os.path.join(dataset_folder,"json_files"))
+        profiles_json, post_histories_json = converter(profiles_html, post_histories_html, overwrite=overwrite_json, supress_output=supress_output)
+        
+
+        dataLoader = DiscourseDataLoader()
+        all_posts = dataLoader(profiles_json, post_histories_json)
+
+        return all_posts
