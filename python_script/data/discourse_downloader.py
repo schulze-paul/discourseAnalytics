@@ -160,9 +160,9 @@ class DiscourseDownloader():
     def _set_up_folders(self):
         html_folder_profiles = os.path.join(self.dataset_folder, "profiles")
         html_folder_post_histories = os.path.join(self.dataset_folder, "post_histories")
-        if not Path(html_folder_profiles).is_file():
+        if not os.path.isdir(html_folder_profiles):
             os.makedirs(html_folder_profiles)
-        if not Path(html_folder_post_histories).is_file():
+        if not os.path.isdir(html_folder_post_histories):
             os.makedirs(html_folder_post_histories)
 
     def _start_chrome_browser(self):
@@ -217,7 +217,8 @@ class DiscourseDownloader():
             print("chromedriver could not get page, skipping to next")
             return None
 
-    def _write_html_to_file(self, filename, html, overwrite=False):
+    @staticmethod
+    def _write_html_to_file(filename, html, overwrite=False):
         """
         Writes an html to disk.
 
