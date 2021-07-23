@@ -43,7 +43,6 @@ class DiscourseConverter():
             position = re.search("profiles", filepath).start()
             
             username = filepath[position + len("profiles") + 1: len(filepath) - len(".html")]
-            print(username)
             return username
 
         def get_username(profile_soup):
@@ -125,7 +124,6 @@ class DiscourseConverter():
             position = re.search("post_histories", filepath).start()
             
             username = filepath[position + len("post_histories") + 1: len(filepath) - len(".html")]
-            print(username)
             return username
 
         def get_post_topic(post_soup):

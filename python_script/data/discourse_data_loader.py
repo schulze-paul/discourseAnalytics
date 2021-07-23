@@ -71,7 +71,6 @@ class DiscourseDataLoader():
         all_posts = []
         for profile, post_history in zip(profiles, post_histories):
             for post in post_history:
-                print(post['username'] + " " + profile['username'])
                 assert(post['username'] == profile['username'])
                 post.update(profile)
                 all_posts.append(post)

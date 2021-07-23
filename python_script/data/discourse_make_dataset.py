@@ -21,7 +21,7 @@ class MakeDataset():
         self.downloader = DiscourseDownloader(website_url, dataset_folder=dataset_folder + "\html_files")
         _, profiles_html, post_histories_html = self.downloader(sleep_time=sleep_time, overwrite=overwrite_html, supress_output = supress_output)
         
-        self.converter = DiscourseConverter(website_url, dataset_folder=dataset_folder +"\json_files")
+        self.converter = DiscourseConverter(website_url, dataset_folder=os.path.join(dataset_folder,"json_files"))
         profiles_json, post_histories_json = self.converter(profiles_html, post_histories_html, overwrite=overwrite_json, supress_output=supress_output)
         
 
