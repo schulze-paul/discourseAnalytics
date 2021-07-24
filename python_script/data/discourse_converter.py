@@ -59,7 +59,11 @@ class DiscourseConverter():
         def get_member_status(profile_soup):
             member_status_h3 = profile_soup.find('h3')
             member_status = member_status_h3.find(text=True, recursive=False)
-            if member_status != "Member" or "Director":
+            if member_status[0:6] == "Member":
+                return "Member"
+            if member_status[0:8] == "Director":
+                return "Director"
+            else:
                 return "Not Member"
 
         def get_join_time(profile_soup):
@@ -106,10 +110,12 @@ class DiscourseConverter():
                     profile_dict['username'] = get_username(profile_soup)                
                     profile_dict['full_name'] = get_full_name(profile_soup)
                     profile_dict['member_status'] = get_member_status(profile_soup)
+                
                     if get_join_time(profile_soup) is not None:
                         profile_dict['join_timestamp'] = get_join_time(profile_soup)
                     if get_last_post_time(profile_soup) is not None:
                         profile_dict['last_post_timestamp'] = get_last_post_time(profile_soup)
+                        profile_dict['empty'] = False
                     else:
                         profile_dict['empty'] = True
 
