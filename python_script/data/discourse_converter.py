@@ -10,13 +10,21 @@ class DiscourseConverter():
     """
     Discourse converter class
     Defines a converter that takes html files from a Discourse website 
-    and converts it into json files 
+    and converts the data it into json files 
     """
 
     user_profile_json_filepath_list = []
     user_post_history_json_filepath_list = []
 
     def __init__(self, website_url, dataset_folder=os.path.join("datasets","Discourse","json_files")):
+        """
+        Set up the converter
+        
+        Input:
+        :param website_url: string, the url of the discourse website
+        :param dataset_folder: string, the location of the dataset
+        """
+        
         self.website_url = website_url
         self.dataset_folder = dataset_folder
         
@@ -26,8 +34,12 @@ class DiscourseConverter():
         post histories into json files.
 
         Input:
-        :param overwrite: boolean, should the json files be overwritten.    
+        :param user_profile_html_filepath_list: list of strings, locations of the profile html files
+        :param user_post_history_html_filepath_list: list of strings, locations of the post history html files
+        :param overwrite: boolean, should list html files be overwritten
+        :param supress_output: boolean, should the detailed output print be supressed?
         """
+        
         self._set_up_folders()
         self._convert_user_profiles(user_profile_html_filepath_list, overwrite, supress_output)
         self._convert_post_histories(user_post_history_html_filepath_list, overwrite, supress_output)
@@ -39,54 +51,18 @@ class DiscourseConverter():
     # ====================================================================================== #
 
     def _convert_user_profiles(self, user_profile_html_filepath_list, overwrite=False, supress_output=True):
-        
-        def get_username_from_filepath(filepath):
-            position = re.search("profiles", filepath).start()
-            
-            username = filepath[position + len("profiles") + 1: len(filepath) - len(".html")]
-            return username
+        """
+        Extracts profile data from html files and saves them to .json files
 
-        def get_username(profile_soup):
-            username_h1 = profile_soup.find('h1', {'class': 'username'})
-            if username_h1 is None: return None
-            username_with_whitespace = username_h1.find(text=True, recursive=False)
-            return username_with_whitespace.replace(" ", "")
-
-        def get_full_name(profile_soup):
-            full_name_h2 = profile_soup.find('h2', {'class': 'full-name'})
-            return full_name_h2.find(text=True, recursive=False)
-
-        def get_member_status(profile_soup):
-            member_status_h3 = profile_soup.find('h3')
-            member_status = member_status_h3.find(text=True, recursive=False)
-            if member_status[0:6] == "Member":
-                return "Member"
-            if member_status[0:8] == "Director":
-                return "Director"
-            else:
-                return "Not Member"
-
-        def get_join_time(profile_soup):
-            secondary_div = profile_soup.find('div', {'class': 'secondary'})
-            if secondary_div is None: return None
-            divs_in_secondary_div = secondary_div.find_all('div')
-            for div in divs_in_secondary_div:
-                if div.find('dt').find(text=True, recursive=False) == "Joined":
-                    return div.find('span').get('data-time')
-            return None
-
-        def get_last_post_time(profile_soup):
-            secondary_div = profile_soup.find('div', {'class': 'secondary'})
-            if secondary_div is None: return None
-            divs_in_secondary_div = secondary_div.find_all('div')
-            for div in divs_in_secondary_div:
-                if div.find('dt').find(text=True, recursive=False) == "Last Post":
-                    return div.find('span').get('data-time')
-            return None
+        Input:
+        :param user_profile_html_filepath_list: list of strings, locations of the profile html files
+        :param overwrite: boolean, should list html files be overwritten
+        :param supress_output: boolean, should the detailed output print be supressed?
+        """
         
         for index, profile_html_filepath in enumerate(tqdm(user_profile_html_filepath_list, desc="saving user profiles json")):
             
-            username = get_username_from_filepath(profile_html_filepath)
+            username = self.get_username_from_profile_filepath(profile_html_filepath)
 
             profile_json_filepath = os.path.join(self.dataset_folder, "profiles", username + ".json")
             self.user_profile_json_filepath_list.append(profile_json_filepath) # save filepath
@@ -105,16 +81,16 @@ class DiscourseConverter():
                 profile_dict = {}
                 
                 # check if profile is empty
-                if get_username(profile_soup) is not None:
+                if self.get_username(profile_soup) is not None:
                     # extract data from soup
-                    profile_dict['username'] = get_username(profile_soup)                
-                    profile_dict['full_name'] = get_full_name(profile_soup)
-                    profile_dict['member_status'] = get_member_status(profile_soup)
+                    profile_dict['username'] = self.get_username(profile_soup)                
+                    profile_dict['full_name'] = self.get_full_name(profile_soup)
+                    profile_dict['member_status'] = self.get_member_status(profile_soup)
                 
-                    if get_join_time(profile_soup) is not None:
-                        profile_dict['join_timestamp'] = get_join_time(profile_soup)
-                    if get_last_post_time(profile_soup) is not None:
-                        profile_dict['last_post_timestamp'] = get_last_post_time(profile_soup)
+                    if self.get_join_time(profile_soup) is not None:
+                        profile_dict['join_timestamp'] = self.get_join_time(profile_soup)
+                    if self.get_last_post_time(profile_soup) is not None:
+                        profile_dict['last_post_timestamp'] = self.get_last_post_time(profile_soup)
                         profile_dict['empty'] = False
                     else:
                         profile_dict['empty'] = True
@@ -126,36 +102,18 @@ class DiscourseConverter():
                 self._write_data_to_json_file(profile_json_filepath, profile_dict, overwrite)
 
     def _convert_post_histories(self, user_post_history_html_filepath_list, overwrite=False, supress_output=True):
+        """
+        Extracts post history data from html files and saves them to .json files
+
+        Input:
+        :param user_post_history_html_filepath_list: list of strings, locations of the post history html files
+        :param overwrite: boolean, should list html files be overwritten
+        :param supress_output: boolean, should the detailed output print be supressed?
+        """
         
-        def get_username_from_filepath(filepath):
-            position = re.search("post_histories", filepath).start()
-            
-            username = filepath[position + len("post_histories") + 1: len(filepath) - len(".html")]
-            return username
-
-        def get_post_topic(post_soup):
-            title_span = post_soup.find('span', {'class': 'title'})
-            return title_span.find('a').find(text=True, recursive=False)
-
-        def get_post_topic_link(post_soup):
-            title_span = post_soup.find('span', {'class': 'title'})
-            return title_span.find('a').get('href')
-
-        def get_post_category(post_soup):
-            category_span = post_soup.find('span', {'class': 'category-name'})
-            return category_span.find(text=True, recursive=False)
-
-        def get_post_time(post_soup):
-            time_span = post_soup.find('span', {'class':'relative-date date'})
-            return time_span.get('data-time')
-
-        def get_post_text(post_soup):
-            excerpt_p = post_soup.find('p', {'class': 'excerpt'})
-            return excerpt_p.find(text=True, recursive=False)
-
         for index, post_history_html_filepath in enumerate(tqdm(user_post_history_html_filepath_list, desc='saving post histories json')):
             
-            username = get_username_from_filepath(post_history_html_filepath)
+            username = self.get_username_from_post_history_filepath(post_history_html_filepath)
 
             post_history_json_filepath = os.path.join(self.dataset_folder, "post_histories", username + ".json")
             self.user_post_history_json_filepath_list.append(post_history_json_filepath) # save filepath
@@ -180,11 +138,11 @@ class DiscourseConverter():
                     for post_soup in tqdm(all_posts_soup, leave=False, desc=username):
                         post_dict = {}
                         post_dict['username'] = username
-                        post_dict['topic'] = get_post_topic(post_soup)
-                        post_dict['topic_link'] = self.website_url + get_post_topic_link(post_soup)
-                        post_dict['category'] = get_post_category(post_soup)
-                        post_dict['post_timestamp'] = get_post_time(post_soup)
-                        post_dict['text'] = get_post_text(post_soup)
+                        post_dict['topic'] = self.get_post_topic(post_soup)
+                        post_dict['topic_link'] = self.website_url + self.get_post_topic_link(post_soup)
+                        post_dict['category'] = self.get_post_category(post_soup)
+                        post_dict['post_timestamp'] = self.get_post_time(post_soup)
+                        post_dict['text'] = self.get_post_text(post_soup)
 
                         post_history_list.append(post_dict)
 
@@ -231,3 +189,92 @@ class DiscourseConverter():
                 outfile.write(json_string)
                 outfile.close()
     
+    # ====================================================================================== #
+    # HELPER FUNCTIONS PROFILE:                                                              #
+    # ====================================================================================== #
+
+    @staticmethod
+    def get_username_from_profile_filepath(filepath):
+        position = re.search("profiles", filepath).start()
+        
+        username = filepath[position + len("profiles") + 1: len(filepath) - len(".html")]
+        return username
+
+    @staticmethod
+    def get_username(profile_soup):
+        username_h1 = profile_soup.find('h1', {'class': 'username'})
+        if username_h1 is None: return None
+        username_with_whitespace = username_h1.find(text=True, recursive=False)
+        return username_with_whitespace.replace(" ", "")
+
+    @staticmethod
+    def get_full_name(profile_soup):
+        full_name_h2 = profile_soup.find('h2', {'class': 'full-name'})
+        return full_name_h2.find(text=True, recursive=False)
+
+    @staticmethod
+    def get_member_status(profile_soup):
+        member_status_h3 = profile_soup.find('h3')
+        member_status = member_status_h3.find(text=True, recursive=False)
+        if member_status[0:6] == "Member":
+            return "Member"
+        if member_status[0:8] == "Director":
+            return "Director"
+        else:
+            return "Not Member"
+
+    @staticmethod
+    def get_join_time(profile_soup):
+        secondary_div = profile_soup.find('div', {'class': 'secondary'})
+        if secondary_div is None: return None
+        divs_in_secondary_div = secondary_div.find_all('div')
+        for div in divs_in_secondary_div:
+            if div.find('dt').find(text=True, recursive=False) == "Joined":
+                return int(div.find('span').get('data-time'))
+        return None
+
+    @staticmethod
+    def get_last_post_time(profile_soup):
+        secondary_div = profile_soup.find('div', {'class': 'secondary'})
+        if secondary_div is None: return None
+        divs_in_secondary_div = secondary_div.find_all('div')
+        for div in divs_in_secondary_div:
+            if div.find('dt').find(text=True, recursive=False) == "Last Post":
+                return int(div.find('span').get('data-time'))
+        return None
+    
+    # ====================================================================================== #
+    # HELPER FUNCTIONS POST HISTORY:                                                         #
+    # ====================================================================================== #
+
+    @staticmethod
+    def get_username_from_post_history_filepath(filepath):
+        position = re.search("post_histories", filepath).start()
+        
+        username = filepath[position + len("post_histories") + 1: len(filepath) - len(".html")]
+        return username
+
+    @staticmethod
+    def get_post_topic(post_soup):
+        title_span = post_soup.find('span', {'class': 'title'})
+        return title_span.find('a').find(text=True, recursive=False)
+
+    @staticmethod
+    def get_post_topic_link(post_soup):
+        title_span = post_soup.find('span', {'class': 'title'})
+        return title_span.find('a').get('href')
+
+    @staticmethod
+    def get_post_category(post_soup):
+        category_span = post_soup.find('span', {'class': 'category-name'})
+        return category_span.find(text=True, recursive=False)
+
+    @staticmethod
+    def get_post_time(post_soup):
+        time_span = post_soup.find('span', {'class':'relative-date date'})
+        return int(time_span.get('data-time'))
+
+    @staticmethod
+    def get_post_text(post_soup):
+        excerpt_p = post_soup.find('p', {'class': 'excerpt'})
+        return excerpt_p.find(text=True, recursive=False)
