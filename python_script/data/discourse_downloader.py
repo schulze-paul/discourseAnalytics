@@ -19,6 +19,14 @@ class DiscourseDownloader():
     user_post_history_filepath_list = []
 
     def __init__(self, website_url, dataset_folder=os.path.join("datasets","Discourse","html_files")):
+        """
+        Set up the downloader
+
+        Input:
+        :param website_url: string, the url of the discourse website
+        :param dataset_folder: string, the location of the dataset
+        """
+        
         self.website_url = website_url
         self.dataset_folder = dataset_folder
 
@@ -30,10 +38,11 @@ class DiscourseDownloader():
         - post histories
 
         Input:
-        :param overwrite: boolean, should the html files be overwritten.
+        :param sleep_time: float, time that the browser waits for the page to update after scrolling
+        :param overwrite: boolean, should list html files be overwritten
+        :param supress_output: boolean, should the detailed output print be supressed?
         """
 
-        # download data
         self._set_up_folders()
         self._start_chrome_browser()
         self._download_user_list(sleep_time, overwrite, supress_output)
@@ -48,10 +57,12 @@ class DiscourseDownloader():
 
     def _download_user_list(self, sleep_time, overwrite=False, supress_output=False):
         """
-        Download the html files for the user list
+        Download the html file of the user list
         
         Input:
-        :param overwrite_user_list: boolean, should the user list html file be overwritten
+        :param sleep_time: float, time that the browser waits for the page to update after scrolling
+        :param overwrite: boolean, should the html file be overwritten
+        :param supress_output: boolean, should the detailed output print be supressed?
         """
         # downloads the user list html
         self.user_list_html_filepath = os.path.join(self.dataset_folder, "user_list.html")
@@ -79,38 +90,10 @@ class DiscourseDownloader():
         Download the html files for profiles and post histories
 
         Input:
-        :param overwrite_user_data: boolean, should the user data html file be overwritten
+        :param sleep_time: float, time that the browser waits for the page to update after scrolling
+        :param overwrite: boolean, should the html files be overwritten
+        :param supress_output: boolean, should the detailed output print be supressed?
         """
-
-        def get_user_links(user_list_html):
-            """
-            get the links to user profiles from the html file
-            
-            Input:
-            :param user_list_html: html file of the users list of the discourse page
-
-            Output:
-            list of links to the user profiles, strings
-            """
-            user_link_list = []
-            
-            # make soup from user list html
-            user_list_soup = soup(user_list_html, 'html.parser')
-
-            # find the links in the soup
-            username_spans = user_list_soup.find_all('span', {'class': 'username'}) # get a list with all the username spans
-
-            for span in username_spans: 
-                # get the link from each span separately
-                hyperlink = span.find('a')
-                link = hyperlink.get('href')
-                user_link_list.append(link)
-            
-            return user_link_list
-
-        def get_user_name_from_profile_link(profile_link):
-            return profile_link[3:]
-            
 
         # get the links to the profiles first
         if self.user_list_html_filepath is None:
@@ -118,13 +101,13 @@ class DiscourseDownloader():
         
         # open the html file of the user list and get the profile links
         with open(self.user_list_html_filepath, 'rb') as user_list_html:
-            user_links = get_user_links(user_list_html)
+            user_links = self.get_user_links(user_list_html)
 
         # go through each profile link and download the profile html and the post history html        
         for index, profile_link in enumerate(tqdm(user_links, desc="downloading user data")):
             
             # get user name and file names
-            username = get_user_name_from_profile_link(profile_link)
+            username = self.get_user_name_from_profile_link(profile_link)
             profile_filepath = os.path.join(self.dataset_folder, "profiles", username + ".html")
             post_history_filepath = os.path.join(self.dataset_folder, "post_histories", username + ".html")
 
@@ -154,7 +137,7 @@ class DiscourseDownloader():
                     self._write_html_to_file(post_history_filepath, post_history_html, overwrite)
             
     # ====================================================================================== #
-    # HTML HANDLER / DRIVER:                                                                           #
+    # HTML HANDLER / DRIVER:                                                                 #
     # ====================================================================================== #
 
     def _set_up_folders(self):
@@ -241,3 +224,39 @@ class DiscourseDownloader():
             with io.open(filename, 'w', encoding="utf-8") as outfile:
                 outfile.write(html)
                 outfile.close()
+
+    # ====================================================================================== #
+    # HELPERS:                                                                               #
+    # ====================================================================================== #
+
+
+    @staticmethod
+    def get_user_links(user_list_html):
+        """
+        get the links to user profiles from the html file
+        
+        Input:
+        :param user_list_html: html file of the users list of the discourse page
+
+        Output:
+        list of links to the user profiles, strings
+        """
+        user_link_list = []
+        
+        # make soup from user list html
+        user_list_soup = soup(user_list_html, 'html.parser')
+
+        # find the links in the soup
+        username_spans = user_list_soup.find_all('span', {'class': 'username'}) # get a list with all the username spans
+
+        for span in username_spans: 
+            # get the link from each span separately
+            hyperlink = span.find('a')
+            link = hyperlink.get('href')
+            user_link_list.append(link)
+        
+        return user_link_list
+
+    @staticmethod
+    def get_user_name_from_profile_link(profile_link):
+        return profile_link[3:]
