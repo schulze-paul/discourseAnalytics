@@ -33,16 +33,12 @@ class TestDiscourseDownloader(unittest.TestCase):
     def test_get_html_from_url(self):
         self.downloader._get_html_from_url(self.downloader.website_url, sleep_time=0)
     
-    def test_download_user_list(self):
-        # TODO: i dont know how to test this method other than this
-        self.downloader._download_user_list(sleep_time=0)
-
     def test_download_user_data(self):
         # predefined short user list and download from that one
         self.downloader.user_list_html_filepath = os.path.join(self.testing_folder, "test_discourse_downloader", "user_list_1.html")
         
         # test downloader
-        self.downloader._download_user_data(sleep_time=0, overwrite=False)
+        self.downloader._download_user_data(sleep_time=0, overwrite=False, supress_output=True)
         
         # test file names
         downloaded_profile_filename = os.path.join(self.download_folder, "profiles", "Matt_Cliffe.html")
@@ -75,8 +71,19 @@ class TestDiscourseDownloader(unittest.TestCase):
         html_string = html.read()
         self.assertEqual(html_string.decode("utf-8") , "overwritten")
         html.close()
+    
+    def test_get_user_links(self):
+        filepath = os.path.join(self.html_folder, "user_list_2.html")
+        user_list_html = open(filepath, 'rb')
+        user_links = self.downloader.get_user_links(user_list_html)
 
-        # 
+        self.assertEqual(user_links, ["/u/Lorraine_Fossi", "/u/Chris_Ross_Jackson", "/u/Diego_Luiz", "/u/John_Robertson", "/u/Lewisbellerina"]) 
+
+    def test_get_user_name_from_profile_link(self):
+        profile_link = "/u/Matt_Cliffe"
+        username = self.downloader.get_user_name_from_profile_link(profile_link)
+
+        self.assertEqual(username, "/u/Matt_Cliffe")
 
     def tearDown(self):
         # remove contents of download folder

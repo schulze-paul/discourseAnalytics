@@ -9,18 +9,29 @@ def all_tests_suite():
     suite = unittest.TestSuite()
     
     suite.addTest(TestDiscourseDownloader('test_get_html_from_url'))
-    suite.addTest(TestDiscourseDownloader('test_download_user_list'))
     suite.addTest(TestDiscourseDownloader('test_download_user_data'))
     suite.addTest(TestDiscourseDownloader('test_overwriting'))
+    suite.addTest(TestDiscourseDownloader('test_get_user_links'))
+    suite.addTest(TestDiscourseDownloader('test_get_user_links'))
 
     suite.addTest(TestDiscourseConverter('test_convert_user_profiles'))
     suite.addTest(TestDiscourseConverter('test_convert_post_histories'))
     suite.addTest(TestDiscourseConverter('test_overwriting'))
+    suite.addTest(TestDiscourseConverter('test_get_username_from_profile_filepath'))
+    suite.addTest(TestDiscourseConverter('test_get_username'))
+    suite.addTest(TestDiscourseConverter('test_get_full_name'))
+    suite.addTest(TestDiscourseConverter('test_get_member_status'))
+    suite.addTest(TestDiscourseConverter('test_get_join_time'))
+    suite.addTest(TestDiscourseConverter('test_get_last_post_time'))
+    suite.addTest(TestDiscourseConverter('test_get_username_from_post_history_filepath'))
+    suite.addTest(TestDiscourseConverter('test_get_post_topic'))
+    suite.addTest(TestDiscourseConverter('test_get_post_topic_link'))
+    suite.addTest(TestDiscourseConverter('test_get_post_category'))
+    suite.addTest(TestDiscourseConverter('test_get_post_time'))
+    suite.addTest(TestDiscourseConverter('test_get_post_text'))
     
-    suite.addTest(TestDiscourseDataLoader('test_timestamps_to_integer'))
     suite.addTest(TestDiscourseDataLoader('test_call'))
     
-    suite.addTest(TestDiscourseDataset('test_print_table'))
     suite.addTest(TestDiscourseDataset('test_call'))
     
     return suite
