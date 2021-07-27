@@ -55,4 +55,4 @@ class TestDiscourseDataset(unittest.TestCase):
     
     def test_call(self):
         print("")
-        print(self.dataset(topic='Big Games'))
+        self.dataset(topic='Big Games')
