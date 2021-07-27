@@ -11,7 +11,7 @@ class DiscourseDataLoader():
 
     def __init__(self):
         """
-        Set up the downloader
+        Set up the data loader
 
         """
 

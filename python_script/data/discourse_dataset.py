@@ -1,3 +1,4 @@
+from re import search
 from python_script.data.discourse_downloader import DiscourseDownloader
 from python_script.data.discourse_converter import DiscourseConverter
 from python_script.data.discourse_data_loader import DiscourseDataLoader
@@ -10,7 +11,7 @@ import sys
 class DiscourseDataset():
 
     def __init__(self,
-                 first_argument,
+                 postsOrWebsiteUrl,
                  dataset_folder=os.path.join("datasets","Discourse"),
                  supress_output=True,
                  overwrite_html=False,
@@ -19,14 +20,14 @@ class DiscourseDataset():
                  ):
 
         # initialize with downloader
-        if type(first_argument) is str:
-            website_url = first_argument
+        if type(postsOrWebsiteUrl) is str:
+            website_url = postsOrWebsiteUrl
             # download html files and json files and make posts dataset
             posts = self._make_dataset(website_url, dataset_folder=dataset_folder, supress_output=supress_output, overwrite_html=overwrite_html, overwrite_json=overwrite_json, sleep_time=sleep_time) 
         
         # initialize with posts
-        if type(first_argument) is list:
-            posts = first_argument
+        if type(postsOrWebsiteUrl) is list:
+            posts = postsOrWebsiteUrl
 
         # sort posts by post times
         sorted_posts = sorted(posts, key=lambda p: p.get('post_timestamp', sys.maxsize))
@@ -52,44 +53,7 @@ class DiscourseDataset():
         
         """
         
-        def search_for(target_dict, list):
-            """
-            recursively searches for posts with the specified properties and returns new list
-            """
-            def timestamp_search(before_after, key, target_key, target_dict, list):
-                # searches for timestamps before or after at the specified key
-                if before_after == 'before':
-                    new_list = [item for item in list if item[key] < target_dict[target_key]]
-                    target_dict.pop(target_key)
-                    return search_for(target_dict, new_list)
-                if before_after == 'after':
-                    new_list = [item for item in list if item[key] > target_dict[target_key]]
-                    target_dict.pop(target_key)
-                    return search_for(target_dict, new_list)
-
-
-            if 'post_before' not in target_dict and 'post_after' not in target_dict and 'join_before' not in target_dict and 'join_afer' not in target_dict and 'last_post_before' not in target_dict and 'last_post_after' not in target_dict:
-                # do normal dict search, recursion terminated
-                 return [item for item in list if all((item[target_key] == target_value) for target_key, target_value in target_dict.items())] 
-
-            else:
-                # filters posts to before and after and then searches for the other properties
-    
-                if 'post_before' in target_dict:
-                    timestamp_search('before', 'post_timestamp', 'post_before', target_dict, list)
-                if 'post_after' in target_dict:
-                    timestamp_search('after', 'post_timestamp', 'post_after', target_dict, list)
-
-                if 'join_before' in target_dict:
-                    timestamp_search('before', 'join_timestamp', 'join_before', target_dict, list)
-                if 'join_after' in target_dict:
-                    timestamp_search('after', 'join_timestamp', 'join_after', target_dict, list)
-    
-                if 'last_post_before' in target_dict:
-                    timestamp_search('before', 'last_post_timestamp', 'last_post_before', target_dict, list)
-                if 'join_after' in target_dict:
-                    timestamp_search('after', 'last_post_timestamp', 'last_post_after', target_dict, list)
-
+        
         arguments = [username, 
                      full_name, 
                      join_before, 
@@ -140,10 +104,10 @@ class DiscourseDataset():
         # convert datetime objects to timestamps
         for argument, key in zip(time_arguments, time_keys):
             if argument is not None:
-                dict_to_search_for[key] = str(datetime.timestamp(argument))
-
+                dict_to_search_for[key] = datetime.timestamp(argument)
+        
         # filter posts
-        filtered_posts = search_for(dict_to_search_for, self.posts)
+        filtered_posts = self._search_for(dict_to_search_for, self.posts)
 
         # return dataset of filtered posts
         return DiscourseDataset(filtered_posts)
@@ -224,7 +188,6 @@ class DiscourseDataset():
         converter = DiscourseConverter(website_url, dataset_folder=os.path.join(dataset_folder,"json_files"))
         profiles_json, post_histories_json = converter(profiles_html, post_histories_html, overwrite=overwrite_json, supress_output=supress_output)
         
-
         dataLoader = DiscourseDataLoader()
         all_posts = dataLoader(profiles_json, post_histories_json)
 
@@ -232,12 +195,48 @@ class DiscourseDataset():
 
     def find(self, text=None, topic=None):
         pass
+    
+    def _search_for(self, search_dict, list):
+        """
+        recursively searches for posts with the specified properties and returns new list
+        """
+        def timestamp_search(search_key, search_dict, list):
+            if search_key[0:4] == 'post': post_key = 'post_timestamp'
+            if search_key[0:4] == 'join': post_key = 'join_timestamp'
+            if search_key[0:9] == 'last_post': post_key = 'last_post_timestamp'
+            if search_key[len(search_key) - 6:] == 'before': before_after = 'before'
+            if search_key[len(search_key) - 5:] == 'after': before_after = 'after'
+            
+            # searches for timestamps before or after at the specified key
+            if before_after == 'before':
+                new_list = [item for item in list if item[search_key] < search_dict[post_key]]
+                search_dict.pop(search_key)
+                return self._search_for(search_dict, new_list)
+            if before_after == 'after':
+                new_list = [item for item in list if item[search_key] > search_dict[post_key]]
+                search_dict.pop(search_key)
+                return self._search_for(search_dict, new_list)
 
+        time_search_keys = ['post_before', 'post_after', 'join_before', 'join_afer', 'last_post_before', 'last_post_after']
 
+        for post in list:
+            if 'category' not in post:
+                print(post)
+
+        if all((time_key not in search_dict) for time_key in time_search_keys):
+            # do normal dict search, recursion terminated
+            return [item for item in list if all((item[target_key] == target_value) for target_key, target_value in search_dict.items())] 
+
+        else:
+            # do recursive search until all timestamp searches have been resolved
+            for key in time_search_keys:
+                # go through all the possible timestamp keys
+                if key in search_dict:
+                    # if the key is in the search dict, do the timestamp search
+                    timestamp_search(key, search_dict, list)
+                    break
 
 
 from python_script.data.website_base_data import WEBSITE_URL
-
-
 if __name__ == '__main__':
     dataset = DiscourseDataset(WEBSITE_URL)
