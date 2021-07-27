@@ -40,7 +40,7 @@ class TestDiscourseConverter(unittest.TestCase):
         set_up_folders(self)
         set_up_soups(self)
         self.converter = DiscourseConverter(WEBSITE_URL, dataset_folder=self.json_folder)
-        self.converter._set_up_folders()
+        self.converter._set_up_folders(overwrite=False)
 
     def test_convert_user_profiles(self):
         profiles_html = [os.path.join(self.html_folder, "profiles", "Matt_Cliffe.html")]
@@ -167,7 +167,7 @@ class TestDiscourseConverter(unittest.TestCase):
 
     def test_get_post_text(self):
         post_text = self.converter.get_post_text(self.post_soup)
-        self.assertEqual(post_text, "Don’t worry, I’ll make sure to stick to cutting wood and plastic " )
+        self.assertEqual(post_text, 'Don’t worry, I’ll make sure to stick to cutting wood and plastic' )
 
     def tearDown(self):
         # remove contents of download folder

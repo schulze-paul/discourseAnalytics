@@ -2,11 +2,10 @@ from selenium import webdriver
 import time
 import io
 import os
-import re
 from pathlib import Path
 from bs4 import BeautifulSoup as soup
 from tqdm.notebook import tqdm
-
+import shutil
 
 class DiscourseDownloader():
     """
@@ -43,7 +42,7 @@ class DiscourseDownloader():
         :param supress_output: boolean, should the detailed output print be supressed?
         """
 
-        self._set_up_folders()
+        self._set_up_folders(overwrite)
         self._start_chrome_browser()
         self._download_user_list(sleep_time, overwrite, supress_output)
         self._download_user_data(sleep_time, overwrite, supress_output)
@@ -140,9 +139,13 @@ class DiscourseDownloader():
     # HTML HANDLER / DRIVER:                                                                 #
     # ====================================================================================== #
 
-    def _set_up_folders(self):
+    def _set_up_folders(self, overwrite):
         html_folder_profiles = os.path.join(self.dataset_folder, "profiles")
         html_folder_post_histories = os.path.join(self.dataset_folder, "post_histories")
+        if overwrite:
+            shutil.rmtree(html_folder_profiles)
+            shutil.rmtree(html_folder_post_histories)
+                    
         if not os.path.isdir(html_folder_profiles):
             os.makedirs(html_folder_profiles)
         if not os.path.isdir(html_folder_post_histories):

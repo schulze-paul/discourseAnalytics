@@ -27,7 +27,7 @@ class TestDiscourseDownloader(unittest.TestCase):
         self.downloader = DiscourseDownloader(WEBSITE_URL, dataset_folder=self.download_folder)
 
         # start browser
-        self.downloader._set_up_folders()
+        self.downloader._set_up_folders(overwrite=False)
         self.downloader._start_chrome_browser()
 
     def test_get_html_from_url(self):

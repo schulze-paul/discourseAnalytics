@@ -5,6 +5,7 @@ import io
 import os
 import re
 from tqdm.notebook import tqdm
+import shutil
 
 class DiscourseConverter():
     """
@@ -40,7 +41,7 @@ class DiscourseConverter():
         :param supress_output: boolean, should the detailed output print be supressed?
         """
         
-        self._set_up_folders()
+        self._set_up_folders(overwrite)
         self._convert_user_profiles(user_profile_html_filepath_list, overwrite, supress_output)
         self._convert_post_histories(user_post_history_html_filepath_list, overwrite, supress_output)
 
@@ -135,7 +136,7 @@ class DiscourseConverter():
 
                 # check if profile is empty
                 if all_posts_soup is not None:
-                    for post_soup in tqdm(all_posts_soup, leave=False, desc=username):
+                    for post_soup in all_posts_soup:
                         post_dict = {}
                         post_dict['username'] = username
                         post_dict['topic'] = self.get_post_topic(post_soup)
@@ -153,9 +154,15 @@ class DiscourseConverter():
     # JSON HANDLER:                                                                         #
     # ====================================================================================== #
 
-    def _set_up_folders(self):
+    def _set_up_folders(self, overwrite):
         json_folder_profiles = os.path.join(self.dataset_folder, "profiles")
         json_folder_post_histories = os.path.join(self.dataset_folder, "post_histories")
+        
+        if overwrite and os.path.isdir(json_folder_profiles):
+            shutil.rmtree(json_folder_profiles)
+        if overwrite and os.path.isdir(json_folder_post_histories):
+            shutil.rmtree(json_folder_post_histories)
+        
         if not os.path.isdir(json_folder_profiles):
             os.makedirs(json_folder_profiles)
         if not os.path.isdir(json_folder_post_histories):
@@ -277,4 +284,7 @@ class DiscourseConverter():
     @staticmethod
     def get_post_text(post_soup):
         excerpt_p = post_soup.find('p', {'class': 'excerpt'})
-        return excerpt_p.find(text=True, recursive=False)
+        text =  excerpt_p.find(text=True, recursive=False)
+        if text is not None:
+            return text.strip()
+        else: return None
