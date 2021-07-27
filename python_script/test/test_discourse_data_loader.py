@@ -21,23 +21,6 @@ class TestDiscourseDataLoader(unittest.TestCase):
         self.data_loader = DiscourseDataLoader()
 
 
-
-    def test_timestamps_to_integer(self):
-        test_dicts = [{'join_timestamp': "1550691826355", 'test_1': "500"}, {'join_timestamp': '1550691826355', 'test_2': 'text','last_post_timestamp': '1556527466920'}, {'join_timestamp': '1550691826355', 'last_post_timestamp': '1556527466920', 'post_timestamp': '1556072740741'} ]
-
-        for test_dict in test_dicts:
-            converted_dict = self.data_loader.timestamps_to_integer(test_dict)
-            if 'join_timestamp' in test_dict:
-                self.assertEqual(converted_dict['join_timestamp'], 1550691826355)
-            if 'test_1' in test_dict:
-                self.assertEqual(converted_dict['test_1'], "500")
-            if 'test_2' in test_dict:
-                self.assertEqual(converted_dict['test_2'], "text")
-            if 'last_post_timestamp' in test_dict:
-                self.assertEqual(converted_dict['last_post_timestamp'], 1556527466920)
-            if 'post_timestamp' in test_dict:
-                self.assertEqual(converted_dict['post_timestamp'], 1556072740741)
-
     def test_call(self):
         # load prepared profile and post history json files
         profiles = [os.path.join(self.json_folder, "json_files", "profiles", "Matt_Cliffe.json")]
