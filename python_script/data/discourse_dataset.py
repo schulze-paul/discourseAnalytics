@@ -6,6 +6,7 @@ import os
 from datetime import date, datetime
 import numpy as np
 import sys
+from pathlib import Path
 
 
 class DiscourseDataset():
@@ -29,6 +30,9 @@ class DiscourseDataset():
         if type(postsOrWebsiteUrl) is list:
             posts = postsOrWebsiteUrl
 
+        if type(postsOrWebsiteUrl) is not str and type(postsOrWebsiteUrl) is not list:
+            raise TypeError('Dataset is was not initialized with string or list but with ' + str(type(postsOrWebsiteUrl)))
+
         # sort posts by post times
         sorted_posts = sorted(posts, key=lambda p: p.get('post_timestamp', sys.maxsize))
         self.posts = sorted_posts
@@ -49,12 +53,19 @@ class DiscourseDataset():
                category = None,
                empty=None
                ):
+
+        return self.filter_posts(username, full_name, join_before, join_after, last_post_before, last_post_after, member_status, topic, topic_link, post_before, post_after, text, category, empty)
+
+    def filter_posts(self, username, full_name, join_before, join_after, last_post_before, last_post_after, member_status, topic, topic_link, post_before, post_after, text, category, empty):
+        """
+        filter posts according to the specified parameters
+        
+        Input:
+        string
         """
         
-        """
         
-        
-        arguments = [username, 
+        filter_parameters = [username, 
                      full_name, 
                      join_before, 
                      join_after, 
@@ -68,13 +79,13 @@ class DiscourseDataset():
                      text,
                      category,
                      empty]
-        time_arguments = [join_before, 
+        time_parameters = [join_before, 
                           join_after, 
                           last_post_before, 
                           last_post_after, 
                           post_before, 
                           post_after]
-
+        
         keys = ['username',
                 'full_name', 
                 'join_before', 
@@ -98,16 +109,17 @@ class DiscourseDataset():
     
         # build dict to search for 
         dict_to_search_for = {}
-        for argument, key in zip(arguments, keys):
+        for argument, key in zip(filter_parameters, keys):
             if argument is not None:
                 dict_to_search_for[key] = argument
+
         # convert datetime objects to timestamps
-        for argument, key in zip(time_arguments, time_keys):
+        for argument, key in zip(time_parameters, time_keys):
             if argument is not None:
-                dict_to_search_for[key] = datetime.timestamp(argument)
+                dict_to_search_for[key] = self.datetime_to_timestamp(argument)
         
         # filter posts
-        filtered_posts = self._search_for(dict_to_search_for, self.posts)
+        filtered_posts = self._search_for_post(dict_to_search_for, self.posts)
 
         # return dataset of filtered posts
         return DiscourseDataset(filtered_posts)
@@ -138,59 +150,83 @@ class DiscourseDataset():
                  supress_output=True,
                  overwrite_html=False,
                  overwrite_json=False,
+                 overwrite_dataset=False,
                  sleep_time=1
                  ):
+        
+        # load data directly from dataset file
+        filename = os.path.join(dataset_folder,"json_files", "dataset.json")
+        if all([not overwrite_html, not overwrite_json, not overwrite_dataset]) and Path(filename).is_file():
+            dataLoader = DiscourseDataLoader(dataset_folder=os.path.join(dataset_folder,"json_files"))
+            directly_loaded_posts = dataLoader()
+            if directly_loaded_posts is not None: return directly_loaded_posts
 
-        downloader = DiscourseDownloader(website_url, dataset_folder=dataset_folder + "\html_files")
+
+        downloader = DiscourseDownloader(website_url, dataset_folder=os.path.join(dataset_folder, "html_files"))
         _, profiles_html, post_histories_html = downloader(sleep_time=sleep_time, overwrite=overwrite_html, supress_output = supress_output)
         
         converter = DiscourseConverter(website_url, dataset_folder=os.path.join(dataset_folder,"json_files"))
         profiles_json, post_histories_json = converter(profiles_html, post_histories_html, overwrite=overwrite_json, supress_output=supress_output)
-        
-        dataLoader = DiscourseDataLoader()
-        all_posts = dataLoader(profiles_json, post_histories_json)
+            
+        dataLoader = DiscourseDataLoader(dataset_folder=os.path.join(dataset_folder,"json_files"))
+        indirectly_loaded_posts = dataLoader(profiles_json, post_histories_json, overwrite=overwrite_dataset)
 
-        return all_posts
+        return indirectly_loaded_posts
 
     def find(self, text=None, topic=None):
         pass
     
-    def _search_for(self, search_dict, list):
+    def _search_for_post(self, search_dict, posts):
         """
         recursively searches for posts with the specified properties and returns new list
         """
-        def timestamp_search(search_key, search_dict, list):
+        def timestamp_search(search_key, search_dict, posts):
             if search_key[0:4] == 'post': post_key = 'post_timestamp'
             if search_key[0:4] == 'join': post_key = 'join_timestamp'
             if search_key[0:9] == 'last_post': post_key = 'last_post_timestamp'
             if search_key[len(search_key) - 6:] == 'before': before_after = 'before'
             if search_key[len(search_key) - 5:] == 'after': before_after = 'after'
-            
+
+            # remove dicts that dont have the post key
+            posts = [post for post in posts if post_key in post]
+
             # searches for timestamps before or after at the specified key
             if before_after == 'before':
-                new_list = [item for item in list if item[search_key] < search_dict[post_key]]
-                search_dict.pop(search_key)
-                return self._search_for(search_dict, new_list)
+                new_posts = [post for post in posts if post[post_key] < search_dict[search_key]]
             if before_after == 'after':
-                new_list = [item for item in list if item[search_key] > search_dict[post_key]]
-                search_dict.pop(search_key)
-                return self._search_for(search_dict, new_list)
+                new_posts = [post for post in posts if post[post_key] > search_dict[search_key]]
+            
+            # search for dict with the remaining search keys and values
+            search_dict.pop(search_key)
+            return self._search_for_post(search_dict, new_posts)
 
         time_search_keys = ['post_before', 'post_after', 'join_before', 'join_afer', 'last_post_before', 'last_post_after']
+        
+
+        if search_dict == {}: return posts
 
         if all((time_key not in search_dict) for time_key in time_search_keys):
             # do normal dict search, recursion terminated
-            return [item for item in list if all((item[target_key] == target_value) for target_key, target_value in search_dict.items())] 
-
+            filtered_posts = [post for post in posts if all((post[target_key] == target_value) for target_key, target_value in search_dict.items())] 
+            return filtered_posts
         else:
             # do recursive search until all timestamp searches have been resolved
             for key in time_search_keys:
                 # go through all the possible timestamp keys
                 if key in search_dict:
                     # if the key is in the search dict, do the timestamp search
-                    timestamp_search(key, search_dict, list)
-                    break
+                    return timestamp_search(key, search_dict, posts)
 
+    @staticmethod
+    def datetime_to_timestamp(datetime_object):
+        return np.floor(datetime.timestamp(datetime_object)*1000)
+    
+    @staticmethod
+    def timestamp_to_datetime(timestamp):
+        if type(timestamp) is int:
+            return np.floor(datetime.fromtimestamp(timestamp/1000))
+        if type(timestamp) is list:
+            return [datetime.fromtimestamp(np.floor(stamp/1000)) for stamp in timestamp]
 
     def __str__(self):
         
