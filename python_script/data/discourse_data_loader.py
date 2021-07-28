@@ -44,8 +44,8 @@ class DiscourseDataLoader():
 
             self.post_histories.append(post_history)
 
-
-        posts = self._combine_profiles_and_post_histories( self.profiles, self.post_histories)
+        # write all profile data into each post datapoint for that username
+        posts = self._combine_profiles_and_post_histories(self.profiles, self.post_histories)
 
         return posts
 
@@ -56,12 +56,18 @@ class DiscourseDataLoader():
         assert len(profiles) == len(post_histories)
         all_posts = []
         for profile, post_history in zip(profiles, post_histories):
+            
+            # check if post history is empty
+            if len(post_history) == 0:
+                profile.update({'empty': True})
+                all_posts.append(profile)
+            if len(post_history) > 0:
+                profile.update({'empty': False})
+
+            
             for post in post_history:
                 assert(post['username'] == profile['username'])
                 post.update(profile)
                 all_posts.append(post)
-            if 'empty' in profile and len(post_history) == 0:
-                all_posts.append(profile)
-
 
         return all_posts
