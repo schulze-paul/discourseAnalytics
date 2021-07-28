@@ -6,6 +6,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup as soup
 from tqdm.notebook import tqdm
 import shutil
+import sys
 
 class DiscourseDownloader():
     """
@@ -41,6 +42,14 @@ class DiscourseDownloader():
         :param overwrite: boolean, should list html files be overwritten
         :param supress_output: boolean, should the detailed output print be supressed?
         """
+
+
+        if overwrite:
+            confirm = self.query_yes_no("Confirm overwriting html data")
+            if confirm:
+                overwrite = True
+            if not confirm:
+                overwrite = False 
 
         self._set_up_folders(overwrite)
         self._start_chrome_browser()
@@ -263,3 +272,38 @@ class DiscourseDownloader():
     @staticmethod
     def get_user_name_from_profile_link(profile_link):
         return profile_link[3:]
+
+    # ====================================================================================== #
+    # USER INTERFACE:                                                                        #
+    # ====================================================================================== #
+
+    @staticmethod
+    def query_yes_no(question, default="no"):
+        """Ask a yes/no question via raw_input() and return their answer.
+
+        "question" is a string that is presented to the user.
+        "default" is the presumed answer if the user just hits <Enter>.
+                It must be "yes" (the default), "no" or None (meaning
+                an answer is required of the user).
+
+        The "answer" return value is True for "yes" or False for "no".
+        """
+        valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
+        if default is None:
+            prompt = " [y/n] "
+        elif default == "yes":
+            prompt = " [Y/n] "
+        elif default == "no":
+            prompt = " [y/N] "
+        else:
+            raise ValueError("invalid default answer: '%s'" % default)
+
+        while True:
+            sys.stdout.write(question + prompt)
+            choice = input().lower()
+            if default is not None and choice == "":
+                return valid[default]
+            elif choice in valid:
+                return valid[choice]
+            else:
+                sys.stdout.write("Please respond with 'yes' or 'no' " "(or 'y' or 'n').\n")

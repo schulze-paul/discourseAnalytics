@@ -6,6 +6,7 @@ import os
 import re
 from tqdm.notebook import tqdm
 import shutil
+import sys
 
 class DiscourseConverter():
     """
@@ -41,6 +42,13 @@ class DiscourseConverter():
         :param supress_output: boolean, should the detailed output print be supressed?
         """
         
+        if overwrite:
+            confirm = self.query_yes_no("Confirm overwriting json data")
+            if confirm:
+                overwrite = True
+            if not confirm:
+                overwrite = False
+
         self._set_up_folders(overwrite)
         self._convert_user_profiles(user_profile_html_filepath_list, overwrite, supress_output)
         self._convert_post_histories(user_post_history_html_filepath_list, overwrite, supress_output)
@@ -92,13 +100,9 @@ class DiscourseConverter():
                         profile_dict['join_timestamp'] = self.get_join_time(profile_soup)
                     if self.get_last_post_time(profile_soup) is not None:
                         profile_dict['last_post_timestamp'] = self.get_last_post_time(profile_soup)
-                        profile_dict['empty'] = False
-                    else:
-                        profile_dict['empty'] = True
-
+                    
                 else:
                     profile_dict['username'] = username
-                    profile_dict['empty'] = True
 
                 self._write_data_to_json_file(profile_json_filepath, profile_dict, overwrite)
 
@@ -146,6 +150,7 @@ class DiscourseConverter():
                         post_dict['text'] = self.get_post_text(post_soup)
 
                         post_history_list.append(post_dict)
+                
 
                 # write post history to json file
                 self._write_data_to_json_file(post_history_json_filepath, post_history_list, overwrite)
@@ -288,3 +293,39 @@ class DiscourseConverter():
         if text is not None:
             return text.strip()
         else: return None
+
+    
+    # ====================================================================================== #
+    # USER INTERFACE:                                                                        #
+    # ====================================================================================== #
+
+    @staticmethod
+    def query_yes_no(question, default="no"):
+        """Ask a yes/no question via raw_input() and return their answer.
+
+        "question" is a string that is presented to the user.
+        "default" is the presumed answer if the user just hits <Enter>.
+                It must be "yes" (the default), "no" or None (meaning
+                an answer is required of the user).
+
+        The "answer" return value is True for "yes" or False for "no".
+        """
+        valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
+        if default is None:
+            prompt = " [y/n] "
+        elif default == "yes":
+            prompt = " [Y/n] "
+        elif default == "no":
+            prompt = " [y/N] "
+        else:
+            raise ValueError("invalid default answer: '%s'" % default)
+
+        while True:
+            sys.stdout.write(question + prompt)
+            choice = input().lower()
+            if default is not None and choice == "":
+                return valid[default]
+            elif choice in valid:
+                return valid[choice]
+            else:
+                sys.stdout.write("Please respond with 'yes' or 'no' " "(or 'y' or 'n').\n")

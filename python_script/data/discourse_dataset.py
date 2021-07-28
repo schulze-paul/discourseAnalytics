@@ -128,47 +128,6 @@ class DiscourseDataset():
         else: 
             # return unique list with key property from the posts
             return list(set([post[key] for post in self.posts if key in post]))
-
-    def __str__(self):
-        
-        def print_table(myDict, colList=None):
-            """ Pretty print a list of dictionaries (myDict) as a dynamically sized table.
-            If column names (colList) aren't specified, they will show in random order.
-            Author: Thierry Husson - Use it as you want but don't blame me.
-            """
-            lines = []
-
-            if not colList: colList = list(myDict[0].keys() if myDict else [])
-            myList = [colList] # 1st row = header
-            for item in myDict: myList.append([str(item[col] if item[col] is not None else '') for col in colList])
-            colSize = [max(map(len,col)) for col in zip(*myList)]
-            formatStr = ' | '.join(["{{:<{}}}".format(i) for i in colSize])
-            myList.insert(1, ['-' * i for i in colSize]) # Seperating line
-            for item in myList: lines.append(formatStr.format(*item))
-            
-            return lines
-        
-
-        def _convert_timestamps_to_datetime(dict_list):
-            # printing datetime objects instead of timestamp
-            new_dict_list = dict_list.copy()
-            
-            timestamp_keys = ['post_timestamp', 'join_timestamp', 'last_post_timestamp']
-            datetime_keys = ['post_time', 'join_time', 'last_post_time']
-            
-            for post in new_dict_list:
-                for timestamp_key, datetime_key in zip(timestamp_keys, datetime_keys):
-                    post[datetime_key] = datetime.fromtimestamp(np.floor(post[timestamp_key]/1000)).strftime("%Y-%m-%d %H:%M")
-                    post.pop(timestamp_key)
-                
-
-            return new_dict_list
-
-        posts = _convert_timestamps_to_datetime(self.posts)
-        lines = print_table(posts)
-        posts_table_string = "\n".join(lines)
-
-        return posts_table_string
         
     def __eq__(self, obj):
         return self.posts == obj.posts
@@ -219,10 +178,6 @@ class DiscourseDataset():
 
         time_search_keys = ['post_before', 'post_after', 'join_before', 'join_afer', 'last_post_before', 'last_post_after']
 
-        for post in list:
-            if 'category' not in post:
-                print(post)
-
         if all((time_key not in search_dict) for time_key in time_search_keys):
             # do normal dict search, recursion terminated
             return [item for item in list if all((item[target_key] == target_value) for target_key, target_value in search_dict.items())] 
@@ -235,6 +190,49 @@ class DiscourseDataset():
                     # if the key is in the search dict, do the timestamp search
                     timestamp_search(key, search_dict, list)
                     break
+
+
+    def __str__(self):
+        
+        def print_table(myDict, colList=None):
+            """ 
+            Pretty print a list of dictionaries (myDict) as a dynamically sized table.
+            If column names (colList) aren't specified, they will show in random order.
+            Author: Thierry Husson - Use it as you want but don't blame me.
+            """
+            lines = []
+
+            if not colList: colList = list(myDict[0].keys() if myDict else [])
+            myList = [colList] # 1st row = header
+            for item in myDict: myList.append([str(item[col] if item[col] is not None else '') for col in colList])
+            colSize = [max(map(len,col)) for col in zip(*myList)]
+            formatStr = ' | '.join(["{{:<{}}}".format(i) for i in colSize])
+            myList.insert(1, ['-' * i for i in colSize]) # Seperating line
+            for item in myList: lines.append(formatStr.format(*item))
+            
+            return lines
+        
+
+        def _convert_timestamps_to_datetime(dict_list):
+            # printing datetime objects instead of timestamp
+            new_dict_list = dict_list.copy()
+            
+            timestamp_keys = ['post_timestamp', 'join_timestamp', 'last_post_timestamp']
+            datetime_keys = ['post_time', 'join_time', 'last_post_time']
+            
+            for post in new_dict_list:
+                for timestamp_key, datetime_key in zip(timestamp_keys, datetime_keys):
+                    post[datetime_key] = datetime.fromtimestamp(np.floor(post[timestamp_key]/1000)).strftime("%Y-%m-%d %H:%M")
+                    post.pop(timestamp_key)
+                
+
+            return new_dict_list
+
+        #posts = _convert_timestamps_to_datetime(self.posts)
+        #lines = print_table(posts)
+        #posts_table_string = "\n".join(lines)
+
+        return str(self.posts)
 
 
 from python_script.data.website_base_data import WEBSITE_URL
