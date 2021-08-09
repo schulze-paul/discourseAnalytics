@@ -3,35 +3,47 @@ from python_script.data.discourse_downloader import DiscourseDownloader
 from python_script.data.discourse_converter import DiscourseConverter
 from python_script.data.discourse_data_loader import DiscourseDataLoader
 import os
-from datetime import date, datetime
+from datetime import datetime
 import numpy as np
 import sys
 from pathlib import Path
 
 
 class DiscourseDataset():
+    """
+    Discourse dataset class
+    Defines a dataset that can be filtered and plotted 
+    """
+
+    # ====================================================================================== #
+    # USER INTERACTION:                                                                      #
+    # ====================================================================================== #
+
 
     def __init__(self,
-                 postsOrWebsiteUrl,
+                 posts=None,
+                 website_url=None,
                  dataset_folder=os.path.join("datasets","Discourse"),
                  supress_output=True,
                  overwrite_html=False,
                  overwrite_json=False,
                  sleep_time=1
                  ):
+        """
+        Initialize the dataset with an array of posts or with a discourse website url
+        
+        Input:
+        :param posts: string, the url of the discourse website
+        :param dataset_folder: string, the location of the dataset
+        """
 
         # initialize with downloader
-        if type(postsOrWebsiteUrl) is str:
-            website_url = postsOrWebsiteUrl
+        if website_url is not None and posts is None:
             # download html files and json files and make posts dataset
             posts = self._make_dataset(website_url, dataset_folder=dataset_folder, supress_output=supress_output, overwrite_html=overwrite_html, overwrite_json=overwrite_json, sleep_time=sleep_time) 
         
-        # initialize with posts
-        if type(postsOrWebsiteUrl) is list:
-            posts = postsOrWebsiteUrl
-
-        if type(postsOrWebsiteUrl) is not str and type(postsOrWebsiteUrl) is not list:
-            raise TypeError('Dataset is was not initialized with string or list but with ' + str(type(postsOrWebsiteUrl)))
+        if website_url is None and posts is None:
+            raise ValueError('Dataset is was not initialized with website url or with posts')
 
         # sort posts by post times
         sorted_posts = sorted(posts, key=lambda p: p.get('post_timestamp', sys.maxsize))
@@ -54,9 +66,9 @@ class DiscourseDataset():
                empty=None
                ):
 
-        return self.filter_posts(username, full_name, join_before, join_after, last_post_before, last_post_after, member_status, topic, topic_link, post_before, post_after, text, category, empty)
+        return self._filter_posts(username, full_name, join_before, join_after, last_post_before, last_post_after, member_status, topic, topic_link, post_before, post_after, text, category, empty)
 
-    def filter_posts(self, username, full_name, join_before, join_after, last_post_before, last_post_after, member_status, topic, topic_link, post_before, post_after, text, category, empty):
+    def _filter_posts(self, username, full_name, join_before, join_after, last_post_before, last_post_after, member_status, topic, topic_link, post_before, post_after, text, category, empty):
         """
         filter posts according to the specified parameters
         
@@ -207,7 +219,8 @@ class DiscourseDataset():
 
         if all((time_key not in search_dict) for time_key in time_search_keys):
             # do normal dict search, recursion terminated
-            filtered_posts = [post for post in posts if all((post[target_key] == target_value) for target_key, target_value in search_dict.items())] 
+            posts_with_key = [post for post in posts if all((target_key in post) for target_key, target_value in search_dict.items())] 
+            filtered_posts = [post for post in posts_with_key if all((post[target_key] == target_value) for target_key, target_value in search_dict.items())]
             return filtered_posts
         else:
             # do recursive search until all timestamp searches have been resolved
