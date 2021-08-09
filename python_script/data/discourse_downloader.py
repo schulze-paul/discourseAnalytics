@@ -44,7 +44,7 @@ class DiscourseDownloader():
         :param supress_output: boolean, should the detailed output print be supressed?
         """
 
-
+        # overwrite protection
         if overwrite:
             confirm = self.query_yes_no("Confirm overwriting html data")
             if confirm:
@@ -73,6 +73,7 @@ class DiscourseDownloader():
         :param overwrite: boolean, should the html file be overwritten
         :param supress_output: boolean, should the detailed output print be supressed?
         """
+
         # downloads the user list html
         self.user_list_html_filepath = os.path.join(self.dataset_folder, "user_list.html")
         

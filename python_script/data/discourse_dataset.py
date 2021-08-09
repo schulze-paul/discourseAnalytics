@@ -19,7 +19,6 @@ class DiscourseDataset():
     # USER INTERACTION:                                                                      #
     # ====================================================================================== #
 
-
     def __init__(self,
                  posts=None,
                  website_url=None,
@@ -30,11 +29,14 @@ class DiscourseDataset():
                  sleep_time=1
                  ):
         """
-        Initialize the dataset with an array of posts or with a discourse website url
-        
-        Input:
-        :param posts: string, the url of the discourse website
+        Parameters:
+        :param posts: list, post dictionaries
+        :param website_url: string, the base url of the discourse website
         :param dataset_folder: string, the location of the dataset
+        :param supress_output: bool, if the output should be supressed
+        :param overwrite_html: bool, if the html files should be overwritten
+        :param overwrite_json: bool, if the json files should be overwritten
+        :param sleep_time: int, time in seconds that the web crawler should wait for the page to load
         """
 
         # initialize with downloader
@@ -65,8 +67,173 @@ class DiscourseDataset():
                category = None,
                empty=None
                ):
+        """
+        Get dataset with posts filtered according to the parameters 
+        
+        Parameters:
+        :param username: str
+        :param full_name: str
+        :param join_before: Datetime
+        :param join_after: Datetime
+        :param last_post_before: Datetime
+        :param last_post_after: Datetime
+        :param member_status: str
+        :param topic: str
+        :param topic_link: str
+        :param post_before: Datetime
+        :param post_after: Datetime
+        :param text: str
+        :param category: str
+        :param empty: bool
+        """
 
         return self._filter_posts(username, full_name, join_before, join_after, last_post_before, last_post_after, member_status, topic, topic_link, post_before, post_after, text, category, empty)
+
+    def __iter__(self):
+        if self.posts is not None:
+            return iter(self.posts)
+
+    def __len__(self):
+        if self.posts is not None:
+            return len(self.posts) 
+
+    def __getitem__(self, key: int or slice or str) -> list or dict:
+        # if key is integer or slice, return item(s) from list
+        if isinstance(key, int) or isinstance(key, slice):
+            return self.posts[key]
+
+        # if key is string, return unique list with key property from the posts
+        if isinstance(key, str): 
+            return list(set([post[key] for post in self.posts if key in post]))
+        
+    def __eq__(self, obj):
+        # compare posts of dataset
+        return self.posts == obj.posts
+
+    def __str__(self):
+        
+        def print_table(myDict, colList=None):
+            """ 
+            Pretty print a list of dictionaries (myDict) as a dynamically sized table.
+            If column names (colList) aren't specified, they will show in random order.
+            Author: Thierry Husson - Use it as you want but don't blame me.
+            """
+            lines = []
+
+            if not colList: colList = list(myDict[0].keys() if myDict else [])
+            myList = [colList] # 1st row = header
+            for item in myDict: myList.append([str(item[col] if item[col] is not None else '') for col in colList])
+            colSize = [max(map(len,col)) for col in zip(*myList)]
+            formatStr = ' | '.join(["{{:<{}}}".format(i) for i in colSize])
+            myList.insert(1, ['-' * i for i in colSize]) # Seperating line
+            for item in myList: lines.append(formatStr.format(*item))
+            
+            return lines
+        
+
+        def _convert_timestamps_to_datetime(dict_list):
+            # printing datetime objects instead of timestamp
+            new_dict_list = dict_list.copy()
+            
+            timestamp_keys = ['post_timestamp', 'join_timestamp', 'last_post_timestamp']
+            datetime_keys = ['post_time', 'join_time', 'last_post_time']
+            
+            for post in new_dict_list:
+                for timestamp_key, datetime_key in zip(timestamp_keys, datetime_keys):
+                    post[datetime_key] = datetime.fromtimestamp(np.floor(post[timestamp_key]/1000)).strftime("%Y-%m-%d %H:%M")
+                    post.pop(timestamp_key)
+                
+
+            return new_dict_list
+
+        #posts = _convert_timestamps_to_datetime(self.posts)
+        #lines = print_table(posts)
+        #posts_table_string = "\n".join(lines)
+
+        return str(self.posts)
+    
+    # ====================================================================================== #
+    # INITIALIZATION:                                                                        #
+    # ====================================================================================== #
+
+    @staticmethod
+    def _make_dataset(website_url: str,
+                 dataset_folder=os.path.join("datasets","Discourse"),
+                 supress_output=True,
+                 overwrite_html=False,
+                 overwrite_json=False,
+                 overwrite_dataset=False,
+                 sleep_time=1
+                 ) -> list:
+        
+        # load data directly from dataset file
+        filename = os.path.join(dataset_folder,"json_files", "dataset.json")
+        if all([not overwrite_html, not overwrite_json, not overwrite_dataset]) and Path(filename).is_file():
+            dataLoader = DiscourseDataLoader(dataset_folder=os.path.join(dataset_folder,"json_files"))
+            directly_loaded_posts = dataLoader()
+            if directly_loaded_posts is not None: return directly_loaded_posts
+
+
+        downloader = DiscourseDownloader(website_url, dataset_folder=os.path.join(dataset_folder, "html_files"))
+        _, profiles_html, post_histories_html = downloader(sleep_time=sleep_time, overwrite=overwrite_html, supress_output = supress_output)
+        
+        converter = DiscourseConverter(website_url, dataset_folder=os.path.join(dataset_folder,"json_files"))
+        profiles_json, post_histories_json = converter(profiles_html, post_histories_html, overwrite=overwrite_json, supress_output=supress_output)
+            
+        dataLoader = DiscourseDataLoader(dataset_folder=os.path.join(dataset_folder,"json_files"))
+        indirectly_loaded_posts = dataLoader(profiles_json, post_histories_json, overwrite=overwrite_dataset)
+
+        return indirectly_loaded_posts
+
+    # ====================================================================================== #
+    # FILTER POSTS:                                                                          #
+    # ====================================================================================== #
+
+    def find(self, text=None, topic=None):
+        # TODO: find posts with text somewhere in the text or topic somewhere in the topic
+        pass 
+    
+    def _search_for_post(self, search_dict, posts):
+        """
+        recursively searches for posts with the specified properties and returns new list
+        """
+        def timestamp_search(search_key, search_dict, posts):
+            if search_key[0:4] == 'post': post_key = 'post_timestamp'
+            if search_key[0:4] == 'join': post_key = 'join_timestamp'
+            if search_key[0:9] == 'last_post': post_key = 'last_post_timestamp'
+            if search_key[len(search_key) - 6:] == 'before': before_after = 'before'
+            if search_key[len(search_key) - 5:] == 'after': before_after = 'after'
+
+            # remove dicts that dont have the post key
+            posts = [post for post in posts if post_key in post]
+
+            # searches for timestamps before or after at the specified key
+            if before_after == 'before':
+                new_posts = [post for post in posts if post[post_key] < search_dict[search_key]]
+            if before_after == 'after':
+                new_posts = [post for post in posts if post[post_key] > search_dict[search_key]]
+            
+            # search for dict with the remaining search keys and values
+            search_dict.pop(search_key)
+            return self._search_for_post(search_dict, new_posts)
+
+        time_search_keys = ['post_before', 'post_after', 'join_before', 'join_afer', 'last_post_before', 'last_post_after']
+        
+
+        if search_dict == {}: return posts
+
+        if all((time_key not in search_dict) for time_key in time_search_keys):
+            # do normal dict search, recursion terminated
+            posts_with_key = [post for post in posts if all((target_key in post) for target_key, target_value in search_dict.items())] 
+            filtered_posts = [post for post in posts_with_key if all((post[target_key] == target_value) for target_key, target_value in search_dict.items())]
+            return filtered_posts
+        else:
+            # do recursive search until all timestamp searches have been resolved
+            for key in time_search_keys:
+                # go through all the possible timestamp keys
+                if key in search_dict:
+                    # if the key is in the search dict, do the timestamp search
+                    return timestamp_search(key, search_dict, posts)
 
     def _filter_posts(self, username, full_name, join_before, join_after, last_post_before, last_post_after, member_status, topic, topic_link, post_before, post_after, text, category, empty):
         """
@@ -135,101 +302,17 @@ class DiscourseDataset():
 
         # return dataset of filtered posts
         return DiscourseDataset(filtered_posts)
-
-    def __iter__(self):
-        if self.posts is not None:
-            return iter(self.posts)
-
-    def __len__(self):
-        if self.posts is not None:
-            return len(self.posts) 
-
-    def __getitem__(self, key):
-        if isinstance(key, int) or isinstance(key, slice):
-            # if key is integer, return item from list
-            return self.posts[key]
-
-        else: 
-            # return unique list with key property from the posts
-            return list(set([post[key] for post in self.posts if key in post]))
-        
-    def __eq__(self, obj):
-        return self.posts == obj.posts
-
-    @staticmethod
-    def _make_dataset(website_url,
-                 dataset_folder=os.path.join("datasets","Discourse"),
-                 supress_output=True,
-                 overwrite_html=False,
-                 overwrite_json=False,
-                 overwrite_dataset=False,
-                 sleep_time=1
-                 ):
-        
-        # load data directly from dataset file
-        filename = os.path.join(dataset_folder,"json_files", "dataset.json")
-        if all([not overwrite_html, not overwrite_json, not overwrite_dataset]) and Path(filename).is_file():
-            dataLoader = DiscourseDataLoader(dataset_folder=os.path.join(dataset_folder,"json_files"))
-            directly_loaded_posts = dataLoader()
-            if directly_loaded_posts is not None: return directly_loaded_posts
-
-
-        downloader = DiscourseDownloader(website_url, dataset_folder=os.path.join(dataset_folder, "html_files"))
-        _, profiles_html, post_histories_html = downloader(sleep_time=sleep_time, overwrite=overwrite_html, supress_output = supress_output)
-        
-        converter = DiscourseConverter(website_url, dataset_folder=os.path.join(dataset_folder,"json_files"))
-        profiles_json, post_histories_json = converter(profiles_html, post_histories_html, overwrite=overwrite_json, supress_output=supress_output)
-            
-        dataLoader = DiscourseDataLoader(dataset_folder=os.path.join(dataset_folder,"json_files"))
-        indirectly_loaded_posts = dataLoader(profiles_json, post_histories_json, overwrite=overwrite_dataset)
-
-        return indirectly_loaded_posts
-
-    def find(self, text=None, topic=None):
-        pass
     
-    def _search_for_post(self, search_dict, posts):
-        """
-        recursively searches for posts with the specified properties and returns new list
-        """
-        def timestamp_search(search_key, search_dict, posts):
-            if search_key[0:4] == 'post': post_key = 'post_timestamp'
-            if search_key[0:4] == 'join': post_key = 'join_timestamp'
-            if search_key[0:9] == 'last_post': post_key = 'last_post_timestamp'
-            if search_key[len(search_key) - 6:] == 'before': before_after = 'before'
-            if search_key[len(search_key) - 5:] == 'after': before_after = 'after'
+    # ====================================================================================== #
+    # PLOTTING:                                                                            #
+    # ====================================================================================== #
+    
 
-            # remove dicts that dont have the post key
-            posts = [post for post in posts if post_key in post]
 
-            # searches for timestamps before or after at the specified key
-            if before_after == 'before':
-                new_posts = [post for post in posts if post[post_key] < search_dict[search_key]]
-            if before_after == 'after':
-                new_posts = [post for post in posts if post[post_key] > search_dict[search_key]]
-            
-            # search for dict with the remaining search keys and values
-            search_dict.pop(search_key)
-            return self._search_for_post(search_dict, new_posts)
-
-        time_search_keys = ['post_before', 'post_after', 'join_before', 'join_afer', 'last_post_before', 'last_post_after']
-        
-
-        if search_dict == {}: return posts
-
-        if all((time_key not in search_dict) for time_key in time_search_keys):
-            # do normal dict search, recursion terminated
-            posts_with_key = [post for post in posts if all((target_key in post) for target_key, target_value in search_dict.items())] 
-            filtered_posts = [post for post in posts_with_key if all((post[target_key] == target_value) for target_key, target_value in search_dict.items())]
-            return filtered_posts
-        else:
-            # do recursive search until all timestamp searches have been resolved
-            for key in time_search_keys:
-                # go through all the possible timestamp keys
-                if key in search_dict:
-                    # if the key is in the search dict, do the timestamp search
-                    return timestamp_search(key, search_dict, posts)
-
+    # ====================================================================================== #
+    # TIMESTAMPS:                                                                            #
+    # ====================================================================================== #
+    
     @staticmethod
     def datetime_to_timestamp(datetime_object):
         return np.floor(datetime.timestamp(datetime_object)*1000)
@@ -240,48 +323,6 @@ class DiscourseDataset():
             return np.floor(datetime.fromtimestamp(timestamp/1000))
         if type(timestamp) is list:
             return [datetime.fromtimestamp(np.floor(stamp/1000)) for stamp in timestamp]
-
-    def __str__(self):
-        
-        def print_table(myDict, colList=None):
-            """ 
-            Pretty print a list of dictionaries (myDict) as a dynamically sized table.
-            If column names (colList) aren't specified, they will show in random order.
-            Author: Thierry Husson - Use it as you want but don't blame me.
-            """
-            lines = []
-
-            if not colList: colList = list(myDict[0].keys() if myDict else [])
-            myList = [colList] # 1st row = header
-            for item in myDict: myList.append([str(item[col] if item[col] is not None else '') for col in colList])
-            colSize = [max(map(len,col)) for col in zip(*myList)]
-            formatStr = ' | '.join(["{{:<{}}}".format(i) for i in colSize])
-            myList.insert(1, ['-' * i for i in colSize]) # Seperating line
-            for item in myList: lines.append(formatStr.format(*item))
-            
-            return lines
-        
-
-        def _convert_timestamps_to_datetime(dict_list):
-            # printing datetime objects instead of timestamp
-            new_dict_list = dict_list.copy()
-            
-            timestamp_keys = ['post_timestamp', 'join_timestamp', 'last_post_timestamp']
-            datetime_keys = ['post_time', 'join_time', 'last_post_time']
-            
-            for post in new_dict_list:
-                for timestamp_key, datetime_key in zip(timestamp_keys, datetime_keys):
-                    post[datetime_key] = datetime.fromtimestamp(np.floor(post[timestamp_key]/1000)).strftime("%Y-%m-%d %H:%M")
-                    post.pop(timestamp_key)
-                
-
-            return new_dict_list
-
-        #posts = _convert_timestamps_to_datetime(self.posts)
-        #lines = print_table(posts)
-        #posts_table_string = "\n".join(lines)
-
-        return str(self.posts)
 
 
 from python_script.data.website_base_data import WEBSITE_URL
