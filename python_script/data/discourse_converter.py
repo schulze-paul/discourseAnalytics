@@ -18,7 +18,7 @@ class DiscourseConverter():
     user_profile_json_filepath_list = []
     user_post_history_json_filepath_list = []
 
-    def __init__(self, website_url, dataset_folder=os.path.join("datasets","Discourse","json_files")):
+    def __init__(self, website_url: str, dataset_folder=os.path.join("datasets","Discourse","json_files")):
         """
         Set up the converter
         
@@ -30,7 +30,7 @@ class DiscourseConverter():
         self.website_url = website_url
         self.dataset_folder = dataset_folder
         
-    def __call__(self, user_profile_html_filepath_list, user_post_history_html_filepath_list, overwrite=False, supress_output=False):
+    def __call__(self, user_profile_html_filepath_list: list, user_post_history_html_filepath_list: str, overwrite=False, supress_output=False) -> list:
         """
         Convert the html files for the user profiles and 
         post histories into json files.
@@ -59,7 +59,7 @@ class DiscourseConverter():
     # CONVERTERS:                                                                            #
     # ====================================================================================== #
 
-    def _convert_user_profiles(self, user_profile_html_filepath_list, overwrite=False, supress_output=True):
+    def _convert_user_profiles(self, user_profile_html_filepaths: list, overwrite=False, supress_output=True):
         """
         Extracts profile data from html files and saves them to .json files
 
@@ -69,7 +69,7 @@ class DiscourseConverter():
         :param supress_output: boolean, should the detailed output print be supressed?
         """
         
-        for index, profile_html_filepath in enumerate(tqdm(user_profile_html_filepath_list, desc="saving user profiles json")):
+        for index, profile_html_filepath in enumerate(tqdm(user_profile_html_filepaths, desc="saving user profiles json")):
             
             username = self.get_username_from_profile_filepath(profile_html_filepath)
 
@@ -77,7 +77,7 @@ class DiscourseConverter():
             self.user_profile_json_filepath_list.append(profile_json_filepath) # save filepath
             
             # print progress update
-            if not supress_output: print("( " + str(index+1).zfill(4) + " / " + str(len(user_profile_html_filepath_list)) + " ): " + username )
+            if not supress_output: print("( " + str(index+1).zfill(4) + " / " + str(len(user_profile_html_filepaths)) + " ): " + username )
             
             #check if file exists
             if not Path(profile_json_filepath).is_file() or overwrite:
@@ -96,17 +96,17 @@ class DiscourseConverter():
                     profile_dict['full_name'] = self.get_full_name(profile_soup)
                     profile_dict['member_status'] = self.get_member_status(profile_soup)
                 
-                    if self.get_join_time(profile_soup) is not None:
-                        profile_dict['join_timestamp'] = self.get_join_time(profile_soup)
-                    if self.get_last_post_time(profile_soup) is not None:
-                        profile_dict['last_post_timestamp'] = self.get_last_post_time(profile_soup)
+                    if self.get_join_timestamp(profile_soup) is not None:
+                        profile_dict['join_timestamp'] = self.get_join_timestamp(profile_soup)
+                    if self.get_last_post_timestamp(profile_soup) is not None:
+                        profile_dict['last_post_timestamp'] = self.get_last_post_timestamp(profile_soup)
                     
                 else:
                     profile_dict['username'] = username
 
                 self._write_data_to_json_file(profile_json_filepath, profile_dict, overwrite)
 
-    def _convert_post_histories(self, user_post_history_html_filepath_list, overwrite=False, supress_output=True):
+    def _convert_post_histories(self, user_post_history_html_filepaths: list, overwrite=False, supress_output=True):
         """
         Extracts post history data from html files and saves them to .json files
 
@@ -116,7 +116,7 @@ class DiscourseConverter():
         :param supress_output: boolean, should the detailed output print be supressed?
         """
         
-        for index, post_history_html_filepath in enumerate(tqdm(user_post_history_html_filepath_list, desc='saving post histories json')):
+        for index, post_history_html_filepath in enumerate(tqdm(user_post_history_html_filepaths, desc='saving post histories json')):
             
             username = self.get_username_from_post_history_filepath(post_history_html_filepath)
 
@@ -124,7 +124,7 @@ class DiscourseConverter():
             self.user_post_history_json_filepath_list.append(post_history_json_filepath) # save filepath
             
             # print progress update
-            if not supress_output: print("( " + str(index+1).zfill(4) + " / " + str(len(user_post_history_html_filepath_list)) + " ): " + username )
+            if not supress_output: print("( " + str(index+1).zfill(4) + " / " + str(len(user_post_history_html_filepaths)) + " ): " + username )
             
             #check if file exists
             if not Path(post_history_json_filepath).is_file() or overwrite:
@@ -146,7 +146,7 @@ class DiscourseConverter():
                         post_dict['topic'] = self.get_post_topic(post_soup)
                         post_dict['topic_link'] = self.website_url + self.get_post_topic_link(post_soup)
                         post_dict['category'] = self.get_post_category(post_soup)
-                        post_dict['post_timestamp'] = self.get_post_time(post_soup)
+                        post_dict['post_timestamp'] = self.get_post_timestamp(post_soup)
                         post_dict['text'] = self.get_post_text(post_soup)
 
                         post_history_list.append(post_dict)
@@ -159,7 +159,7 @@ class DiscourseConverter():
     # JSON HANDLER:                                                                         #
     # ====================================================================================== #
 
-    def _set_up_folders(self, overwrite):
+    def _set_up_folders(self, overwrite: bool):
         json_folder_profiles = os.path.join(self.dataset_folder, "profiles")
         json_folder_post_histories = os.path.join(self.dataset_folder, "post_histories")
         
@@ -174,7 +174,7 @@ class DiscourseConverter():
             os.makedirs(json_folder_post_histories)
 
     @staticmethod
-    def _write_data_to_json_file(filename, data, overwrite):
+    def _write_data_to_json_file(filename: str, data, overwrite: bool):
         """
         Writes a json file to disk.
 
@@ -206,27 +206,27 @@ class DiscourseConverter():
     # ====================================================================================== #
 
     @staticmethod
-    def get_username_from_profile_filepath(filepath):
+    def get_username_from_profile_filepath(filepath: str) -> str:
         position = re.search("profiles", filepath).start()
         
         username = filepath[position + len("profiles") + 1: len(filepath) - len(".html")]
         return username
 
     @staticmethod
-    def get_username(profile_soup):
-        username_h1 = profile_soup.find('h1', {'class': 'username'})
+    def get_username(profile: soup) -> str:
+        username_h1 = profile.find('h1', {'class': 'username'})
         if username_h1 is None: return None
         username_with_whitespace = username_h1.find(text=True, recursive=False)
         return username_with_whitespace.replace(" ", "")
 
     @staticmethod
-    def get_full_name(profile_soup):
-        full_name_h2 = profile_soup.find('h2', {'class': 'full-name'})
+    def get_full_name(profile: soup) -> str:
+        full_name_h2 = profile.find('h2', {'class': 'full-name'})
         return full_name_h2.find(text=True, recursive=False)
 
     @staticmethod
-    def get_member_status(profile_soup):
-        member_status_h3 = profile_soup.find('h3')
+    def get_member_status(profile: soup) -> str:
+        member_status_h3 = profile.find('h3')
         member_status = member_status_h3.find(text=True, recursive=False)
         if member_status[0:6] == "Member":
             return "Member"
@@ -236,8 +236,8 @@ class DiscourseConverter():
             return "Not Member"
 
     @staticmethod
-    def get_join_time(profile_soup):
-        secondary_div = profile_soup.find('div', {'class': 'secondary'})
+    def get_join_timestamp(profile: soup) -> int:
+        secondary_div = profile.find('div', {'class': 'secondary'})
         if secondary_div is None: return None
         divs_in_secondary_div = secondary_div.find_all('div')
         for div in divs_in_secondary_div:
@@ -246,8 +246,8 @@ class DiscourseConverter():
         return None
 
     @staticmethod
-    def get_last_post_time(profile_soup):
-        secondary_div = profile_soup.find('div', {'class': 'secondary'})
+    def get_last_post_timestamp(profile: soup) -> int:
+        secondary_div = profile.find('div', {'class': 'secondary'})
         if secondary_div is None: return None
         divs_in_secondary_div = secondary_div.find_all('div')
         for div in divs_in_secondary_div:
@@ -260,35 +260,35 @@ class DiscourseConverter():
     # ====================================================================================== #
 
     @staticmethod
-    def get_username_from_post_history_filepath(filepath):
+    def get_username_from_post_history_filepath(filepath: str) -> str:
         position = re.search("post_histories", filepath).start()
         
         username = filepath[position + len("post_histories") + 1: len(filepath) - len(".html")]
         return username
 
     @staticmethod
-    def get_post_topic(post_soup):
-        title_span = post_soup.find('span', {'class': 'title'})
+    def get_post_topic(post: soup) -> str:
+        title_span = post.find('span', {'class': 'title'})
         return title_span.find('a').find(text=True, recursive=False)
 
     @staticmethod
-    def get_post_topic_link(post_soup):
-        title_span = post_soup.find('span', {'class': 'title'})
+    def get_post_topic_link(post: soup) -> str:
+        title_span = post.find('span', {'class': 'title'})
         return title_span.find('a').get('href')
 
     @staticmethod
-    def get_post_category(post_soup):
-        category_span = post_soup.find('span', {'class': 'category-name'})
+    def get_post_category(post: soup) -> str:
+        category_span = post.find('span', {'class': 'category-name'})
         return category_span.find(text=True, recursive=False)
 
     @staticmethod
-    def get_post_time(post_soup):
-        time_span = post_soup.find('span', {'class':'relative-date date'})
+    def get_post_timestamp(post: soup) -> int:
+        time_span = post.find('span', {'class':'relative-date date'})
         return int(time_span.get('data-time'))
 
     @staticmethod
-    def get_post_text(post_soup):
-        excerpt_p = post_soup.find('p', {'class': 'excerpt'})
+    def get_post_text(post: soup) -> str:
+        excerpt_p = post.find('p', {'class': 'excerpt'})
         text =  excerpt_p.find(text=True, recursive=False)
         if text is not None:
             return text.strip()
@@ -300,7 +300,7 @@ class DiscourseConverter():
     # ====================================================================================== #
 
     @staticmethod
-    def query_yes_no(question, default="no"):
+    def query_yes_no(question: str, default="no"):
         """Ask a yes/no question via raw_input() and return their answer.
 
         "question" is a string that is presented to the user.

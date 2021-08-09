@@ -1,3 +1,4 @@
+from IPython.core.display import HTML
 from selenium import webdriver
 import time
 import io
@@ -18,7 +19,7 @@ class DiscourseDownloader():
     user_profile_filepath_list = []
     user_post_history_filepath_list = []
 
-    def __init__(self, website_url, dataset_folder=os.path.join("datasets","Discourse","html_files")):
+    def __init__(self, website_url: str, dataset_folder=os.path.join("datasets","Discourse","html_files")):
         """
         Set up the downloader
 
@@ -30,7 +31,7 @@ class DiscourseDownloader():
         self.website_url = website_url
         self.dataset_folder = dataset_folder
 
-    def __call__(self, sleep_time, overwrite=False, supress_output=False):
+    def __call__(self, sleep_time: int, overwrite=False, supress_output=False):
         """
         Download the html files for:
         - the user list
@@ -63,7 +64,7 @@ class DiscourseDownloader():
     # DOWNLOADERS:                                                                           #
     # ====================================================================================== #
 
-    def _download_user_list(self, sleep_time, overwrite=False, supress_output=False):
+    def _download_user_list(self, sleep_time: int, overwrite=False, supress_output=False):
         """
         Download the html file of the user list
         
@@ -93,7 +94,7 @@ class DiscourseDownloader():
             if user_list_html is not None:
                 self._write_html_to_file(self.user_list_html_filepath, user_list_html, overwrite)
             
-    def _download_user_data(self, sleep_time, overwrite=False, supress_output=False):
+    def _download_user_data(self, sleep_time: int, overwrite=False, supress_output=False):
         """
         Download the html files for profiles and post histories
 
@@ -148,7 +149,7 @@ class DiscourseDownloader():
     # HTML HANDLER / DRIVER:                                                                 #
     # ====================================================================================== #
 
-    def _set_up_folders(self, overwrite):
+    def _set_up_folders(self, overwrite: bool):
         html_folder_profiles = os.path.join(self.dataset_folder, "profiles")
         html_folder_post_histories = os.path.join(self.dataset_folder, "post_histories")
         if overwrite:
@@ -172,7 +173,7 @@ class DiscourseDownloader():
     def _quit_chrome_browser(self):
         self.driver.quit()
 
-    def _scroll_down(self, sleep_time):
+    def _scroll_down(self, sleep_time: int):
             """A method for scrolling the page."""
 
             # Get scroll height.
@@ -213,7 +214,7 @@ class DiscourseDownloader():
             return None
 
     @staticmethod
-    def _write_html_to_file(filename, html, overwrite=False):
+    def _write_html_to_file(filename: str, html: HTML, overwrite=False):
         """
         Writes an html to disk.
 
@@ -243,7 +244,7 @@ class DiscourseDownloader():
 
 
     @staticmethod
-    def get_user_links(user_list_html):
+    def get_user_links(users: HTML) -> list:
         """
         get the links to user profiles from the html file
         
@@ -256,7 +257,7 @@ class DiscourseDownloader():
         user_link_list = []
         
         # make soup from user list html
-        user_list_soup = soup(user_list_html, 'html.parser')
+        user_list_soup = soup(users, 'html.parser')
 
         # find the links in the soup
         username_spans = user_list_soup.find_all('span', {'class': 'username'}) # get a list with all the username spans
@@ -270,7 +271,7 @@ class DiscourseDownloader():
         return user_link_list
 
     @staticmethod
-    def get_user_name_from_profile_link(profile_link):
+    def get_user_name_from_profile_link(profile_link: str) -> str:
         return profile_link[3:]
 
     # ====================================================================================== #

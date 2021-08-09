@@ -136,11 +136,11 @@ class TestDiscourseConverter(unittest.TestCase):
         self.assertEqual(member_status, "Member")
 
     def test_get_join_time(self):
-        join_time = self.converter.get_join_time(self.profile_soup)
+        join_time = self.converter.get_join_timestamp(self.profile_soup)
         self.assertEqual(join_time, 1550691826355)
         
     def test_get_last_post_time(self):
-        last_post_time = self.converter.get_last_post_time(self.profile_soup)
+        last_post_time = self.converter.get_last_post_timestamp(self.profile_soup)
         self.assertEqual(last_post_time, 1556527466920)
 
     def test_get_username_from_post_history_filepath(self):
@@ -162,7 +162,7 @@ class TestDiscourseConverter(unittest.TestCase):
         self.assertEqual(category, "Discussion")
 
     def test_get_post_time(self):
-        post_time = self.converter.get_post_time(self.post_soup)
+        post_time = self.converter.get_post_timestamp(self.post_soup)
         self.assertEqual(post_time, 1556527466920)
 
     def test_get_post_text(self):
