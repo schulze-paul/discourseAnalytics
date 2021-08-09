@@ -7,7 +7,7 @@ from datetime import datetime
 import numpy as np
 import sys
 from pathlib import Path
-
+import copy
 
 class DiscourseDataset():
     """
@@ -87,7 +87,8 @@ class DiscourseDataset():
         :param empty: bool
         """
 
-        return self._filter_posts(username, full_name, join_before, join_after, last_post_before, last_post_after, member_status, topic, topic_link, post_before, post_after, text, category, empty)
+        posts = self._filter_posts(username, full_name, join_before, join_after, last_post_before, last_post_after, member_status, topic, topic_link, post_before, post_after, text, category, empty)
+        return DiscourseDataset(posts)
 
     def __iter__(self):
         if self.posts is not None:
@@ -152,6 +153,22 @@ class DiscourseDataset():
 
         return str(self.posts)
     
+    def find(self, *strings):
+        """
+        Finds posts with string in the text or as topic.
+
+        Parameters:
+        :param args: str or list, looking for this string in either text or topic
+        """
+
+        posts = copy.deepcopy(self.posts) # returns new dataset, so copy of posts is required
+        
+        strings = [string.lower() for string in strings] # ignore case(upper/lower)
+        posts = [post for post in posts if 'text' in post and 'topic' in post and post['text'] is not None and post['topic'] is not None ]
+        posts = [post for post in posts if any([string in post['text'].lower() or string in post['topic'].lower() for string in strings])]
+
+        return DiscourseDataset(posts)
+        
     # ====================================================================================== #
     # INITIALIZATION:                                                                        #
     # ====================================================================================== #
@@ -189,10 +206,6 @@ class DiscourseDataset():
     # FILTER POSTS:                                                                          #
     # ====================================================================================== #
 
-    def find(self, text=None, topic=None):
-        # TODO: find posts with text somewhere in the text or topic somewhere in the topic
-        pass 
-    
     def _search_for_post(self, search_dict, posts):
         """
         recursively searches for posts with the specified properties and returns new list
@@ -285,7 +298,7 @@ class DiscourseDataset():
                      'last_post_after', 
                      'post_before', 
                      'post_after']
-    
+
         # build dict to search for 
         dict_to_search_for = {}
         for argument, key in zip(filter_parameters, keys):
@@ -296,12 +309,13 @@ class DiscourseDataset():
         for argument, key in zip(time_parameters, time_keys):
             if argument is not None:
                 dict_to_search_for[key] = self.datetime_to_timestamp(argument)
-        
+
         # filter posts
-        filtered_posts = self._search_for_post(dict_to_search_for, self.posts)
+        posts = copy.deepcopy(self.posts) # returns new list, so copy of posts is required
+        filtered_posts = self._search_for_post(dict_to_search_for, posts)
 
         # return dataset of filtered posts
-        return DiscourseDataset(filtered_posts)
+        return filtered_posts
     
     # ====================================================================================== #
     # PLOTTING:                                                                            #
