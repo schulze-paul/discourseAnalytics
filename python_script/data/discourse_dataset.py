@@ -8,6 +8,8 @@ import numpy as np
 import sys
 from pathlib import Path
 import copy
+import matplotlib.pyplot as plt
+from matplotlib.ticker import AutoMinorLocator
 
 class DiscourseDataset():
     """
@@ -308,7 +310,7 @@ class DiscourseDataset():
         # convert datetime objects to timestamps
         for argument, key in zip(time_parameters, time_keys):
             if argument is not None:
-                dict_to_search_for[key] = self.datetime_to_timestamp(argument)
+                dict_to_search_for[key] = self._datetime_to_timestamp(argument)
 
         # filter posts
         posts = copy.deepcopy(self.posts) # returns new list, so copy of posts is required
@@ -321,6 +323,64 @@ class DiscourseDataset():
     # PLOTTING:                                                                            #
     # ====================================================================================== #
     
+    def plot(self, title=None):
+        """
+        Plots a histogram of post times with months as bins
+        """
+        
+        def get_month_ticks(datetimes: list) -> list:
+            datetimes = sorted(datetimes)
+
+            first_month = sorted(datetimes)[0].month
+            first_year = sorted(datetimes)[0].year
+            last_month = sorted(datetimes)[len(datetimes)-1].month
+            last_year = sorted(datetimes)[len(datetimes)-1].year
+            
+            month = first_month
+            year = first_year
+
+            months = []
+            years = []
+            while year < last_year or (year == last_year and month <= last_month):
+                months.append(month)
+                years.append(year)
+                if month == 12:
+                    month = 1
+                    year = year + 1
+                else:
+                    month = month + 1 
+            
+            month_year = [str(month).zfill(2) + "\n'" + str(year)[2:] for year, month in zip(years, months)]
+            return month_year
+
+        def get_number_month_bins(datetimes: list) -> int:
+            num_bins = len(get_month_ticks(datetimes))
+            return num_bins
+
+        datetimes = self._timestamp_to_datetime(self['post_timestamp'])
+        fig = plt.figure(figsize=(18,6))
+        n, bins, patches = plt.hist(datetimes, get_number_month_bins(datetimes))
+        
+        # define minor ticks and draw a grid with them
+        minor_locator = AutoMinorLocator(2)
+        plt.gca().xaxis.set_minor_locator(minor_locator)
+        plt.grid(which='minor', color='white', lw = 0.5)
+        
+        # x ticks
+        xticks = [(bins[idx+1] + value)/2 for idx, value in enumerate(bins[:-1])]
+        xticks_labels = get_month_ticks(datetimes)
+        plt.xticks(xticks, labels = xticks_labels)
+        
+        # labels and title
+        plt.xlabel('month\nyear')
+        plt.ylabel('Number of Posts')
+
+        if title is None:
+            plt.title('Number of Posts per Month')
+        else:
+            plt.title(title)
+        plt.show()
+
 
 
     # ====================================================================================== #
@@ -328,11 +388,11 @@ class DiscourseDataset():
     # ====================================================================================== #
     
     @staticmethod
-    def datetime_to_timestamp(datetime_object):
+    def _datetime_to_timestamp(datetime_object):
         return np.floor(datetime.timestamp(datetime_object)*1000)
     
     @staticmethod
-    def timestamp_to_datetime(timestamp):
+    def _timestamp_to_datetime(timestamp):
         if type(timestamp) is int:
             return np.floor(datetime.fromtimestamp(timestamp/1000))
         if type(timestamp) is list:
