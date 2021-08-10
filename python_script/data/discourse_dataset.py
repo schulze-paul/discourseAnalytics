@@ -10,6 +10,7 @@ from pathlib import Path
 import copy
 import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator
+from IPython.core.display import display, HTML
 
 class DiscourseDataset():
     """
@@ -22,8 +23,8 @@ class DiscourseDataset():
     # ====================================================================================== #
 
     def __init__(self,
+                 website_url,
                  posts=None,
-                 website_url=None,
                  dataset_folder=os.path.join("datasets","Discourse"),
                  supress_output=True,
                  overwrite_html=False,
@@ -41,14 +42,13 @@ class DiscourseDataset():
         :param sleep_time: int, time in seconds that the web crawler should wait for the page to load
         """
 
+        self.website_url = website_url
+
         # initialize with downloader
-        if website_url is not None and posts is None:
+        if posts is None:
             # download html files and json files and make posts dataset
             posts = self._make_dataset(website_url, dataset_folder=dataset_folder, supress_output=supress_output, overwrite_html=overwrite_html, overwrite_json=overwrite_json, sleep_time=sleep_time) 
         
-        if website_url is None and posts is None:
-            raise ValueError('Dataset is was not initialized with website url or with posts')
-
         # sort posts by post times
         sorted_posts = sorted(posts, key=lambda p: p.get('post_timestamp', sys.maxsize))
         self.posts = sorted_posts
@@ -90,13 +90,13 @@ class DiscourseDataset():
         """
 
         posts = self._filter_posts(username, full_name, join_before, join_after, last_post_before, last_post_after, member_status, topic, topic_link, post_before, post_after, text, category, empty)
-        return DiscourseDataset(posts)
+        return DiscourseDataset(self.website_url, posts=posts)
 
-    def __iter__(self):
+    def __iter__(self) -> iter:
         if self.posts is not None:
             return iter(self.posts)
 
-    def __len__(self):
+    def __len__(self) -> int:
         if self.posts is not None:
             return len(self.posts) 
 
@@ -109,52 +109,30 @@ class DiscourseDataset():
         if isinstance(key, str): 
             return list(set([post[key] for post in self.posts if key in post]))
         
-    def __eq__(self, obj):
+    def __eq__(self, obj) -> bool:
         # compare posts of dataset
         return self.posts == obj.posts
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """
+        Pretty prints post topic, username, time and text 
+        """
+        def get_post_time(post):
+            return str(self._timestamp_to_datetime(post['post_timestamp']))
+
+        # go through posts and post one by one, sorted by date
+        sorted_posts = sorted(self.posts, key=lambda p: p.get('post_timestamp', sys.maxsize), reverse=True)
         
-        def print_table(myDict, colList=None):
-            """ 
-            Pretty print a list of dictionaries (myDict) as a dynamically sized table.
-            If column names (colList) aren't specified, they will show in random order.
-            Author: Thierry Husson - Use it as you want but don't blame me.
-            """
-            lines = []
+        string_list = []
+        for post in sorted_posts:
+            header = post['topic'] + " | " + post['username'] + " | "  + get_post_time(post)
+            text =  (post['text'] + "\n")
 
-            if not colList: colList = list(myDict[0].keys() if myDict else [])
-            myList = [colList] # 1st row = header
-            for item in myDict: myList.append([str(item[col] if item[col] is not None else '') for col in colList])
-            colSize = [max(map(len,col)) for col in zip(*myList)]
-            formatStr = ' | '.join(["{{:<{}}}".format(i) for i in colSize])
-            myList.insert(1, ['-' * i for i in colSize]) # Seperating line
-            for item in myList: lines.append(formatStr.format(*item))
-            
-            return lines
+            string_list.append(header)
+            string_list.append(text)
         
+        return "\n".join(string_list)
 
-        def _convert_timestamps_to_datetime(dict_list):
-            # printing datetime objects instead of timestamp
-            new_dict_list = dict_list.copy()
-            
-            timestamp_keys = ['post_timestamp', 'join_timestamp', 'last_post_timestamp']
-            datetime_keys = ['post_time', 'join_time', 'last_post_time']
-            
-            for post in new_dict_list:
-                for timestamp_key, datetime_key in zip(timestamp_keys, datetime_keys):
-                    post[datetime_key] = datetime.fromtimestamp(np.floor(post[timestamp_key]/1000)).strftime("%Y-%m-%d %H:%M")
-                    post.pop(timestamp_key)
-                
-
-            return new_dict_list
-
-        #posts = _convert_timestamps_to_datetime(self.posts)
-        #lines = print_table(posts)
-        #posts_table_string = "\n".join(lines)
-
-        return str(self.posts)
-    
     def find(self, *strings):
         """
         Finds posts with string in the text or as topic.
@@ -169,8 +147,15 @@ class DiscourseDataset():
         posts = [post for post in posts if 'text' in post and 'topic' in post and post['text'] is not None and post['topic'] is not None ]
         posts = [post for post in posts if any([string in post['text'].lower() or string in post['topic'].lower() for string in strings])]
 
-        return DiscourseDataset(posts)
-        
+        return DiscourseDataset(self.website_url, posts=posts)
+    
+    def display(self):
+        display(self._create_posts_html())
+
+    def write_to_custom_html(self, filename):
+        with open(filename, "o+") as html_file:
+            
+
     # ====================================================================================== #
     # INITIALIZATION:                                                                        #
     # ====================================================================================== #
@@ -386,7 +371,30 @@ class DiscourseDataset():
             plt.title(title)
         plt.show()
 
+    def _create_posts_html(self):
+        """
+        Pretty prints post topic, username, time and text with hyperlinks 
+        """
+        def get_post_topic_tag(post):
+            return "<a href=" + post['topic_link'] + ">" + post['topic'] + "</a>"
 
+        def get_profile_html_tag(post):
+            return "<a href=" + self.website_url + "/u/" + post['username'] + ">" + post['username'] + "</a>"
+
+        def get_post_time(post):
+            return str(self._timestamp_to_datetime(post['post_timestamp']))
+
+        # go through posts and post one by one, sorted by date
+        sorted_posts = sorted(self.posts, key=lambda p: p.get('post_timestamp', sys.maxsize), reverse=True)
+        
+        html_strings = []
+        for post in sorted_posts:
+            html_strings.append(get_post_topic_tag(post) + " | " + get_profile_html_tag(post) + " | " + get_post_time(post))
+            html_strings.append("<p>" + post['text'] + "</p>")
+
+        posts_html = HTML("\n".join(html_strings))
+
+        return posts_html
 
     # ====================================================================================== #
     # TIMESTAMPS:                                                                            #
@@ -399,10 +407,9 @@ class DiscourseDataset():
     @staticmethod
     def _timestamp_to_datetime(timestamp):
         if type(timestamp) is int:
-            return np.floor(datetime.fromtimestamp(timestamp/1000))
+            return datetime.fromtimestamp(np.floor(timestamp/1000))
         if type(timestamp) is list:
             return [datetime.fromtimestamp(np.floor(stamp/1000)) for stamp in timestamp]
-
 
 from python_script.data.website_base_data import WEBSITE_URL
 if __name__ == '__main__':
