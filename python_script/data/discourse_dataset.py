@@ -1,16 +1,16 @@
-from re import search
 from python_script.data.discourse_downloader import DiscourseDownloader
 from python_script.data.discourse_converter import DiscourseConverter
 from python_script.data.discourse_data_loader import DiscourseDataLoader
 import os
-from datetime import datetime
-import numpy as np
+import io
 import sys
-from pathlib import Path
 import copy
+from pathlib import Path
+import numpy as np
+from IPython.core.display import display, HTML
+from datetime import datetime
 import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator
-from IPython.core.display import display, HTML
 
 class DiscourseDataset():
     """
@@ -152,9 +152,32 @@ class DiscourseDataset():
     def display(self):
         display(self._create_posts_html())
 
-    def write_to_custom_html(self, filename):
-        with open(filename, "o+") as html_file:
-            
+    def write(self, filename: str, overwrite=False):
+        """
+        Writes an html to disk.
+
+        Input:
+        :param filename: string, path to file
+        :param html: html file, file that should be written to disk
+        :param overwrite: boolean, should the file be overwritten if it already exists
+        """
+
+        html = self._create_posts_html()
+
+        if Path(filename).is_file() and not overwrite:
+            # html file already exists, dont overwrite
+            pass
+        elif not Path(filename).is_file():
+            # write to file
+            open(filename, 'x') # create file
+            with io.open(filename, 'w', encoding="utf-8") as outfile:
+                outfile.write(html)
+                outfile.close()            
+        elif Path(filename).is_file() and overwrite:
+            # html file should be overwritten
+            with io.open(filename, 'w', encoding="utf-8") as outfile:
+                outfile.write(html)
+                outfile.close()
 
     # ====================================================================================== #
     # INITIALIZATION:                                                                        #
