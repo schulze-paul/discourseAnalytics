@@ -239,9 +239,14 @@ class DiscourseDataset():
 
         if all((time_key not in search_dict) for time_key in time_search_keys):
             # do normal dict search, recursion terminated
-            posts_with_key = [post for post in posts if all((target_key in post) for target_key, target_value in search_dict.items())] 
-            filtered_posts = [post for post in posts_with_key if all((post[target_key] == target_value) for target_key, target_value in search_dict.items())]
+            
+            # check if the keys are in the posts
+            filtered_posts = [post for post in posts if all((target_key in post) for target_key, _ in search_dict.items())] 
+            # filter the posts, check if the post has the target value or if the post is in the list of target values            
+            filtered_posts = [post for post in filtered_posts if all(((post[target_key] == target_value) or (post[target_key] in target_value)) for target_key, target_value in search_dict.items())]
+                    
             return filtered_posts
+        
         else:
             # do recursive search until all timestamp searches have been resolved
             for key in time_search_keys:
@@ -310,7 +315,7 @@ class DiscourseDataset():
         # convert datetime objects to timestamps
         for argument, key in zip(time_parameters, time_keys):
             if argument is not None:
-                dict_to_search_for[key] = self._datetime_to_timestamp(argument)
+                dict_to_search_for[key] = self._datetime_to_timestamp(argument)        
 
         # filter posts
         posts = copy.deepcopy(self.posts) # returns new list, so copy of posts is required
