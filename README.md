@@ -18,7 +18,7 @@ Calling the resulting DiscourseDataset class object instance returns a new insta
 #### Filtering by username, full name, topic, category
 
 The dataset class can filter posts with  
-For example calling `dataset(username="JohnDoe")` returns an instance with all the posts from the user with the username `JohnDoe', or `dataset(tpoic="Hi I am Joe")` returns an instance with all the posts from the topic `Hi I am Joe'.
+For example calling `dataset(username="JohnDoe")` returns an instance with all the posts from the user with the username `JohnDoe`, or `dataset(topic="Hi I am Joe")` returns an instance with all the posts from the topic `Hi I am Joe'.
 
 #### Filtering by timeframe
 
