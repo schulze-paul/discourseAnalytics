@@ -133,7 +133,7 @@ class DiscourseDataset():
         
         return "\n".join(string_list)
 
-    def find(self, *strings):
+    def search(self, *strings):
         """
         Finds posts with string in the text or as topic.
 
