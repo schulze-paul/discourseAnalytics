@@ -146,7 +146,7 @@ class DiscourseDataset():
         
         strings = [string.lower() for string in strings] # ignore case(upper/lower)
         posts = [post for post in posts if 'text' in post and 'topic' in post and post['text'] is not None and post['topic'] is not None ]
-        posts = [post for post in posts if any([string in post['text'].lower() or string in post['topic'].lower() for string in strings])]
+        posts = [post for post in posts if any([string in post['text'].lower() or string in post['topic'].lower() or [string in post['username'].lower() for string in strings])]
 
         return DiscourseDataset(self.website_url, posts=posts)
     
