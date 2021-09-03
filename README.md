@@ -1,11 +1,15 @@
 # discourseAnalytics
 
 
-[Installation](#installation) | [Analytics ToolBox](#analytics-toolbox) 
+[Installation](#installation) | [How it  [Initialization](#initialization) | [Filter](#filter) | [Search](#search) | [Sort](#sort) | [Print](#print) | [Activity Plot](#activity-plot)
 
-Data analytics toolbox for Discourse in `python3`.
-Using `selenium` and `BeautifulSoup4`
+Data analytics toolbox in Python for Discourse.
 
+The API makes it easy to sort, filter and search through posts and display the data. 
+
+## How it works
+
+Using `selenuim` and `BeautifulSoup4`
 
 ## Installation
 
@@ -19,6 +23,8 @@ Navigate to the downloaded `discourseAnalytics` folder and install the needed de
 ```
 pip install --upgrade --user -r requirements.txt
 ```
+
+Discourse Analytics works best in a [Jupyter notebok](https://jupyter.org/) environment, but also works from the command line.
 
 ## Initialization
 
@@ -69,10 +75,7 @@ dataset = DiscourseDataset(discourse_website, supress_output=False)
 
 </details>
   
-## Analytics Toolbox
-
-
-### 1. Filtering Posts
+## Filter
 
 Calling the ```DiscourseDataset``` with a filter argument such as `username` returns a new instance of ```DiscourseDataset``` with the respective  subset of the posts.
 
@@ -89,7 +92,7 @@ posts_in_hi = dataset(topic="Hi I am John")
 posts_by_John_in_hi = dataset(username="JohnSmith", topic="Hi I am John")
 ```
 
-#### - Filtering by Time 
+### - Filtering by Time 
 
 The `DiscourseDataset` class can also filter posts according to different times. 
 You can filter according to the post time, the join time and the last time a user posted something.
@@ -107,13 +110,17 @@ end_of_2007 = datetime.date(2007, 12, 31)
 posts_after_2007 = dataset(post_after=end_of_2007)
 ```
 
-#### - Searching for posts
+## Search
 
 Posts can be searched with a keyword by calling `.search(keyword)`. All posts that contain the "keyword" in the `text`, `topic`, `category` or `username` are returned.
 
-### Output
+## Sort
 
-#### Writing / Displaying list of posts
+## Print
+
+Writing / Displaying list of posts
+
+With `.display()`, 
 
 A list of the posts can be displayed with `.display()` or written to an `html` file with `.write(filename)`. 
 The posts are sorted by post time.
@@ -124,6 +131,6 @@ The `html` file can be overwritten with `.write(filename, overwrite=True)`
 </p>
 
 
-#### Plotting a histogram of post times
+## Activity Plot
 
 A histogram of post times sorted by month can be plotted with `.plot()`. The histogram can be given a title with `.plot(title="Title of Plot")`
