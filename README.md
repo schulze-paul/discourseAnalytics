@@ -1,7 +1,7 @@
 # discourseAnalytics
 
 
-[Installation](#installation) | [How it  [Initialization](#initialization) | [Filter](#filter) | [Search](#search) | [Sort](#sort) | [Print](#print) | [Activity Plot](#activity-plot)
+[Installation](#installation) | [How it works](#how-it-works) | [Initialization](#initialization) | [Filter](#filter) | [Search](#search) | [Sort](#sort) | [Print](#print) | [Activity Plot](#activity-plot)
 
 Data analytics toolbox in Python for Discourse.
 
