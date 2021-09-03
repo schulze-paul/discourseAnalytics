@@ -6,16 +6,16 @@ Data Analytics Suite for Discourse Forum data
 
 ### Download
 
-Download the latest release here
+Download the latest release [here](download.com)
 
 ### Run the App locally
 
-Install the needed dependencies with 
+Navigate to the downloaded `discourseAnalytics` folder and install the needed dependencies with 
 ```
 pip install --upgrade --user -r requirements.txt
 ```
 
-Navigate to the `discourseAnalytics` folder and import `discourseAnalytics` with  
+Import `discourseAnalytics` with  
 ```python
 from DiscourseAnalytics import DiscourseDataset
 ```
@@ -29,11 +29,13 @@ discourse_website = "website.com"
 dataset = DiscourseDataset(discourse_website)
 ```
 
-discourseAnalytics downloads the user profiles and post histories.
+discourseAnalytics downloads the user profiles and post histories into the folder `./datasets/Discourse/html_files`.
 The downloaded files get scraped and packaged into one `json` file that contains all the available user information of every user.
 
-<img align="center" src="https://raw.githubusercontent.com/bl4ckp4nther4/discourseAnalytics/main/images/downloading_progress_bar.PNG" width="300">
-
+<p align="center">
+<img  src="https://raw.githubusercontent.com/bl4ckp4nther4/discourseAnalytics/main/images/downloading_progress_bar.PNG" width="500">
+</p>
+  
 ### Download speed
 
 This process can take some time. It can be sped up with the argument `sleep_time` by lowering the amount of time that `selenium` waits to load more content after scrolling to the bottom.  
@@ -95,13 +97,10 @@ A list of the posts can be displayed with `.display()` or written to an `html` f
 The posts are sorted by post time.
 The `html` file can be overwritten with `.write(filename, overwrite=True)`
 
-> <a href=website.com/topic>Topic 1</a> | <a href=website.com/u/username>UserName</a>
-> 
-> This is a post text.
-> 
-> <a href=website.com/topic>Topic 2</a> | <a href=website.com/u/username>UserName</a>
-> 
-> This is another post text.
+<p align="center">
+<img  src="https://raw.githubusercontent.com/bl4ckp4nther4/discourseAnalytics/main/images/display_function.PNG" width="500">
+</p>
+
 
 #### Plotting a histogram of post times
 
