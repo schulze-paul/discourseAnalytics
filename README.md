@@ -1,4 +1,4 @@
-# DiscourseAnalytics
+# discourseAnalytics
 
 Data Analytics Suite for Discourse Forum data
 
