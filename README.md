@@ -2,8 +2,26 @@
 
 Data Analytics Suite for Discourse Forum data
 
+## Installation
 
-## Functionality
+### Download
+
+Download the lastest release here
+
+### Run the App locally
+
+Install the needed dependencies with  
+`pip install --upgrade --user -r requirements.txt`
+
+Navigate to the `discourseAnalytics` folder and import `discourseAnalytics` with  
+`from DiscourseAnalytics import DiscourseDataset`
+
+Initialize the dataset with  
+`discourse_website = "website.com"`  
+`dataset = DiscourseDataset(discourse_website)`
+
+
+<img align="right" src="https://github.com/bl4ckp4nther4/discourseAnalytics/blob/master/images/download_progress_bar.png" size=150>
 
 ### Initilization
 
