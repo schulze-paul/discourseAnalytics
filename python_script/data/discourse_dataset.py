@@ -43,6 +43,7 @@ class DiscourseDataset():
         """
 
         self.website_url = website_url
+        self.dataset_folder = dataset_folder
 
         # initialize with downloader
         if posts is None:
@@ -118,7 +119,7 @@ class DiscourseDataset():
         Pretty prints post topic, username, time and text 
         """
         def get_post_time(post):
-            return str(self._timestamp_to_datetime(post['post_timestamp']))
+            return str(self.timestamp_to_datetime(post['post_timestamp']))
 
         # go through posts and post one by one, sorted by date
         sorted_posts = sorted(self.posts, key=lambda p: p.get('post_timestamp', sys.maxsize), reverse=True)
@@ -150,7 +151,7 @@ class DiscourseDataset():
         return DiscourseDataset(self.website_url, posts=posts)
     
     def display(self):
-        display(self._create_posts_html())
+        display(HTML(self._create_posts_html()))
 
     def write(self, filename: str, overwrite=False):
         """
@@ -161,21 +162,22 @@ class DiscourseDataset():
         :param html: html file, file that should be written to disk
         :param overwrite: boolean, should the file be overwritten if it already exists
         """
-
         html = self._create_posts_html()
+        html = html.replace("’", "'") # replacing for compatibilty
+        filepath = os.path.join(self.dataset_folder, filename + ".html")
 
-        if Path(filename).is_file() and not overwrite:
+        if Path(filepath).is_file() and not overwrite:
             # html file already exists, dont overwrite
             pass
-        elif not Path(filename).is_file():
+        elif not Path(filepath).is_file():
             # write to file
-            open(filename, 'x') # create file
-            with io.open(filename, 'w', encoding="utf-8") as outfile:
+            open(filepath, 'x') # create file
+            with io.open(filepath, 'w', encoding="utf-8") as outfile:
                 outfile.write(html)
                 outfile.close()            
-        elif Path(filename).is_file() and overwrite:
+        elif Path(filepath).is_file() and overwrite:
             # html file should be overwritten
-            with io.open(filename, 'w', encoding="utf-8") as outfile:
+            with io.open(filepath, 'w', encoding="utf-8") as outfile:
                 outfile.write(html)
                 outfile.close()
 
@@ -323,7 +325,7 @@ class DiscourseDataset():
         # convert datetime objects to timestamps
         for argument, key in zip(time_parameters, time_keys):
             if argument is not None:
-                dict_to_search_for[key] = self._datetime_to_timestamp(argument)        
+                dict_to_search_for[key] = self.datetime_to_timestamp(argument)        
 
         # filter posts
         posts = copy.deepcopy(self.posts) # returns new list, so copy of posts is required
@@ -370,10 +372,14 @@ class DiscourseDataset():
             num_bins = len(get_month_ticks(datetimes))
             return num_bins
 
-        datetimes = self._timestamp_to_datetime(self['post_timestamp'])
+        datetimes = self.timestamp_to_datetime(self['post_timestamp'])
         fig = plt.figure(figsize=(18,6))
         n, bins, patches = plt.hist(datetimes, get_number_month_bins(datetimes))
-        
+        print("n")
+        print(n)
+        print("patches")
+        print(patches)
+
         # define minor ticks and draw a grid with them
         minor_locator = AutoMinorLocator(2)
         plt.gca().xaxis.set_minor_locator(minor_locator)
@@ -405,17 +411,18 @@ class DiscourseDataset():
             return "<a href=" + self.website_url + "/u/" + post['username'] + ">" + post['username'] + "</a>"
 
         def get_post_time(post):
-            return str(self._timestamp_to_datetime(post['post_timestamp']))
+            return str(self.timestamp_to_datetime(post['post_timestamp']))
 
         # go through posts and post one by one, sorted by date
         sorted_posts = sorted(self.posts, key=lambda p: p.get('post_timestamp', sys.maxsize), reverse=True)
         
         html_strings = []
         for post in sorted_posts:
-            html_strings.append(get_post_topic_tag(post) + " | " + get_profile_html_tag(post) + " | " + get_post_time(post))
-            html_strings.append("<p>" + post['text'] + "</p>")
+            if post['text'] is not None:
+                html_strings.append(get_post_topic_tag(post) + " | " + get_profile_html_tag(post) + " | " + get_post_time(post))
+                html_strings.append("<p>" + post['text'] + "</p>")
 
-        posts_html = HTML("\n".join(html_strings))
+        posts_html = "\n".join(html_strings)
 
         return posts_html
 
@@ -424,11 +431,11 @@ class DiscourseDataset():
     # ====================================================================================== #
     
     @staticmethod
-    def _datetime_to_timestamp(datetime_object):
+    def datetime_to_timestamp(datetime_object: datetime) -> int:
         return np.floor(datetime.timestamp(datetime_object)*1000)
     
     @staticmethod
-    def _timestamp_to_datetime(timestamp):
+    def timestamp_to_datetime(timestamp: int) -> datetime:
         if type(timestamp) is int:
             return datetime.fromtimestamp(np.floor(timestamp/1000))
         if type(timestamp) is list:
