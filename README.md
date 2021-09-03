@@ -1,21 +1,21 @@
 # discourseAnalytics
 
-Data analytics and suite for discourse.
+Data analytics toolbox for Discourse.
 
-## 1. Installation
+## Installation
 
-### Download
+### 1. Download
 
 Download the latest release [here](download.com)
 
-### Run the App locally
+### 2. Run the App locally
 
 Navigate to the downloaded `discourseAnalytics` folder and install the needed dependencies with 
 ```
 pip install --upgrade --user -r requirements.txt
 ```
 
-## 2. Initialization
+## Initialization
 
 Import `discourseAnalytics` and initialize the dataset    
 ```python
@@ -33,31 +33,31 @@ discourseAnalytics downloads the user profiles and post histories into the folde
 The downloaded files get scraped and packaged into one `json` file that contains all the available user information of every user.
 
   
-### Download speed
+#### - Download speed
 
 The download process can take some time. To speed things up you can use the argument `sleep_time`, which changes the amount of seconds that `selenium` waits to load more content after scrolling to the bottom.  
 ```python
 dataset = DiscourseDataset(discourse_website, sleep_time=1)
 ```
 
-### Redownload Data 
+#### - Redownload Data 
 
 If the source files get corruped, the data can be redownloaded with the arguments `overwrite_html=True` and `overwrite_html=True`.  
 ```python
 dataset = DiscourseDataset(discourse_website, overwrite_html=True, overwrite_json=True)  
 ```
 
-### Print Detailed Output
+#### - Print Detailed Output
 
 A more detailed output while downloading and scraping can be printed with the argument `supress_output=False`.  
 ```python
 dataset = DiscourseDataset(discourse_website, supress_output=False)
 ```
 
-## 3. Analytics Toolbox
+## Analytics Toolbox
 
 
-### Filtering Posts
+### 1. Filtering Posts
 
 Calling the ```DiscourseDataset``` with a filter argument such as `username` returns a new instance of ```DiscourseDataset``` with the respective  subset of the posts.
 
@@ -74,7 +74,7 @@ posts_in_hi = dataset(topic="Hi I am John")
 posts_by_John_in_hi = dataset(username="JohnSmith", topic="Hi I am John")
 ```
 
-#### Filtering by Time 
+#### - Filtering by Time 
 
 The `DiscourseDataset` class can also filter posts according to different times. 
 You can filter according to the post time, the join time and the last time a user posted something.
@@ -92,7 +92,7 @@ end_of_2007 = datetime.date(2007, 12, 31)
 posts_after_2007 = dataset(post_after=end_of_2007)
 ```
 
-#### Searching for posts
+#### - Searching for posts
 
 Posts can be searched with a keyword by calling `.search(keyword)`. All posts that contain the "keyword" in the `text`, `topic`, `category` or `username` are returned.
 
