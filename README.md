@@ -3,8 +3,8 @@
 
 [Installation](#installation) | [Analytics ToolBox](#analytics-toolbox) 
 
-Data analytics toolbox for Discourse.
-Using `selenium` and ``BeautifulSoup4`
+Data analytics toolbox for Discourse in `python3`.
+Using `selenium` and `BeautifulSoup4`
 
 
 ## Installation
@@ -37,28 +37,38 @@ dataset = DiscourseDataset("discourse.website.com")
 discourseAnalytics downloads the user profiles and post histories into the folder `./datasets/Discourse/html_files`.
 The downloaded files get scraped and packaged into one `json` file that contains all the available user information of every user.
 
-  
-#### - Download speed
+Click on any of the headers to see more information: 
 
-The download process can take some time. To speed things up you can use the argument `sleep_time`, which changes the amount of seconds that `selenium` waits to load more content after scrolling to the bottom.  
+<details>
+<summary>Download speed</summary>
+ 
+  The download process can take some time. To speed things up, you can use the argument `sleep_time`. This changes the amount of seconds that `selenium` waits to load more content after scrolling to the bottom.  
 ```python
 dataset = DiscourseDataset(discourse_website, sleep_time=1)
 ```
 
-#### - Redownload Data 
+</details>
+
+<details>
+<summary>Redownload data</summary>
 
 If the source files get corruped, the data can be redownloaded with the arguments `overwrite_html=True` and `overwrite_html=True`.  
 ```python
 dataset = DiscourseDataset(discourse_website, overwrite_html=True, overwrite_json=True)  
 ```
 
-#### - Print Detailed Output
+</details>  
+
+<details>
+<summary>Detailed output</summary>
 
 A more detailed output while downloading and scraping can be printed with the argument `supress_output=False`.  
 ```python
 dataset = DiscourseDataset(discourse_website, supress_output=False)
 ```
 
+</details>
+  
 ## Analytics Toolbox
 
 
