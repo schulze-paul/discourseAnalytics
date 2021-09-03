@@ -1,6 +1,11 @@
 # discourseAnalytics
 
+
+[Installation](#installation) | [Analytics ToolBox](#analytics-toolbox) 
+
 Data analytics toolbox for Discourse.
+Using `selenium` and ``BeautifulSoup4`
+
 
 ## Installation
 
