@@ -35,14 +35,14 @@ class TestDiscourseDownloader(unittest.TestCase):
     
     def test_download_user_data(self):
         # predefined short user list and download from that one
-        self.downloader.user_list_html_filepath = os.path.join(self.testing_folder, "test_discourse_downloader", "user_list_1.html")
+        self.downloader.user_list_html_filepath = os.path.join(self.testing_folder, "test_discourse_downloader", "user_list_1")
         
         # test downloader
         self.downloader._download_user_data(sleep_time=0, overwrite=False, supress_output=True)
         
         # test file names
-        downloaded_profile_filename = os.path.join(self.download_folder, "profiles", "Matt_Cliffe.html")
-        downloaded_post_history_filename = os.path.join(self.download_folder, "post_histories", "Matt_Cliffe.html")
+        downloaded_profile_filename = os.path.join(self.download_folder, "profiles", "Matt_Cliffe")
+        downloaded_post_history_filename = os.path.join(self.download_folder, "post_histories", "Matt_Cliffe")
         files = [downloaded_profile_filename, downloaded_post_history_filename]
         
         for file in files:
@@ -73,7 +73,7 @@ class TestDiscourseDownloader(unittest.TestCase):
         html.close()
     
     def test_get_user_links(self):
-        filepath = os.path.join(self.html_folder, "user_list_2.html")
+        filepath = os.path.join(self.html_folder, "user_list_2")
         user_list_html = open(filepath, 'rb')
         user_links = self.downloader.get_user_links(user_list_html)
 
