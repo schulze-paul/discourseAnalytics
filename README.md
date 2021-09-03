@@ -54,15 +54,57 @@ A more detailed output while downloading and scraping can be printed with the ar
 dataset = DiscourseDataset(discourse_website, supress_output=False)
 ```
 
-## Analytics
+## Analytics Toolbox
 
 
 ### Filtering Posts
 
-Calling the ```DiscourseDataset``` with a filter argument such as `username` returns a new instance of ```DiscourseDataset``` with a subset of the posts
+Calling the ```DiscourseDataset``` with a filter argument such as `username` returns a new instance of ```DiscourseDataset``` with the respective  subset of the posts.
+
+
+Posts ca be filtered by `username`, `full_name`, `topic` and `category`.
+
+For example calling `dataset(username="JohnDoe")` returns an instance with all the posts from the user with the username `JohnDoe`, or `dataset(topic="Hi I am Joe")` returns an instance with all the posts from the topic `Hi I am Joe`. These can be combined, so that `dataset(username="JohnDoe", topic="Hi I am Joe")` returns all posts by the user `JohnDoe` under the topic `Hi I am Joe`.
+
+#### Filtering by Time 
+
+The `DiscourseDataset` class can also filter posts according to different times. 
+You can filter according to the post time with `post_before` and `post_after`, according to the join time of the user with `join_before` and `join_after` and according to the last time a user posted with `last_post_before` and `last_post_after`.
+
+For this purpose, you need to hand over a `datetime` object in the call method of the `DiscourseDataset` class.
 
 ```python
-john_does_posts = dataset(username="JohnDoe")
+# import datetime
+import datetime.datetime as datetime
+
+# create a datetime object
+end_of_2007 = datetime.date(2007, 12, 31)
+
+
+# pass datetime object and filter posts
+posts_after_2007 = dataset(post_after=end_of_2007)
+```
+
+#### Example
+
+```python
+>>> dataset.display()
+Hi, I am Joe | JoeSmith | 2019-04-29 10:44:26  
+Hello, this is me, I am Joe
+
+Hi, I am Joe | john_doe | 2019-04-29 10:34:07  
+Hi Joe, nice to meet you
+
+Hi, I am Joe | JoeSmith | 2019-04-27 12:19:41  
+Thank you nice to meet you too
+
+>>> posts_by_JoeSmith = dataset(username="JoeSmith")
+>>> posts_by_JoeSmith.display()
+Hi, I am Joe | JoeSmith | 2019-04-29 10:44:26  
+Hello, this is me, I am Joe
+
+Hi, I am Joe | JoeSmith | 2019-04-27 12:19:41  
+Thank you nice to meet you too
 ```
 
 #### Filtering by username, full name, topic, category
@@ -71,13 +113,9 @@ The `DiscourseDataset` class can filter posts according to the username, the ful
 
 For example calling `dataset(username="JohnDoe")` returns an instance with all the posts from the user with the username `JohnDoe`, or `dataset(topic="Hi I am Joe")` returns an instance with all the posts from the topic `Hi I am Joe`.
 
-These can be combined, so that `dataset(username="JohnDoe", topic="Hi I am Joe")` returns all posts by the user `JohnDoe` under the topic `Hi I am Joe`.
 
 #### Filtering by time
 
-The `DiscourseDataset` class can also filter posts according to the time of posts. 
-For this purpose, we need to hand over a `datetime` object in the call method of the `DiscourseDataset` class.
-We can filter according to the post time with `post_before` and `post_after`, according to the join time of the user with `join_before` and `join_after` and according to the last time a user posted with `last_post_before` and `last_post_after`.
 
 ```python
 # create a datetime object
