@@ -6,28 +6,57 @@ Data Analytics Suite for Discourse Forum data
 
 ### Download
 
-Download the lastest release here
+Download the latest release here
 
 ### Run the App locally
 
-Install the needed dependencies with  
-`pip install --upgrade --user -r requirements.txt`
+Install the needed dependencies with 
+```
+pip install --upgrade --user -r requirements.txt
+```
 
 Navigate to the `discourseAnalytics` folder and import `discourseAnalytics` with  
-`from DiscourseAnalytics import DiscourseDataset`
+```python
+from DiscourseAnalytics import DiscourseDataset
+```
+
+## Initialization
 
 Initialize the dataset with  
-`discourse_website = "website.com"`  
-`dataset = DiscourseDataset(discourse_website)`
+```python
+# initialize dataset by downloading data
+discourse_website = "website.com"  
+dataset = DiscourseDataset(discourse_website)
+```
 
+discourseAnalytics downloads the user profiles and post histories.
+The downloaded files get scraped and packaged into one `json` file that contains all the available user information of every user.
 
-<img align="right" src="https://github.com/bl4ckp4nther4/discourseAnalytics/blob/master/images/download_progress_bar.png" size=150>
+<img align="center" src="https://raw.githubusercontent.com/bl4ckp4nther4/discourseAnalytics/main/images/downloading_progress_bar.PNG" width="300">
 
-### Initilization
+### Download speed
 
-The Dataset is initialized with the URL to a discourse forum, for example: `dataset = DiscourseDataset('twittercommunity.com')`.
-DiscourseAnalytics downloads all profile data as html files with `selenium` and pulls the data with `beautifulsoup 4`.
-The resulting DiscourseDataset Object contains all accessible information about posts and profiles.
+This process can take some time. It can be sped up with the argument `sleep_time` by lowering the amount of time that `selenium` waits to load more content after scrolling to the bottom.  
+```python
+dataset = DiscourseDataset(discourse_website, sleep_time=1)
+```
+
+### Redownload Data 
+
+If the source files get corruped, the data can be redownloaded with the arguments `overwrite_html=True` and `overwrite_html=True`.  
+```python
+dataset = DiscourseDataset(discourse_website, overwrite_html=True, overwrite_json=True)  
+```
+
+### Print Detailed Output
+
+A more detailed output while downloading and scraping can be printed with the argument `supress_output=False`.  
+```python
+dataset = DiscourseDataset(discourse_website, supress_output=False)
+```
+
+## Analytics
+
 
 ### Filtering Posts
 
