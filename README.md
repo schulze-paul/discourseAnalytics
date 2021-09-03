@@ -1,6 +1,6 @@
 # discourseAnalytics
 
-Data Analytics Suite for Discourse Forum data
+Data analytics and suite for discourse.
 
 ## Installation
 
@@ -15,30 +15,27 @@ Navigate to the downloaded `discourseAnalytics` folder and install the needed de
 pip install --upgrade --user -r requirements.txt
 ```
 
-Import `discourseAnalytics` with  
-```python
-from DiscourseAnalytics import DiscourseDataset
-```
-
 ## Initialization
 
-Initialize the dataset with  
+Import `discourseAnalytics` and initialize the dataset    
 ```python
-# initialize dataset by downloading data
-discourse_website = "website.com"  
-dataset = DiscourseDataset(discourse_website)
-```
+from DiscourseAnalytics import DiscourseDataset
 
-discourseAnalytics downloads the user profiles and post histories into the folder `./datasets/Discourse/html_files`.
-The downloaded files get scraped and packaged into one `json` file that contains all the available user information of every user.
+dataset = DiscourseDataset("discourse.website.com")
+```
 
 <p align="center">
 <img  src="https://raw.githubusercontent.com/bl4ckp4nther4/discourseAnalytics/main/images/downloading_progress_bar.PNG" width="500">
 </p>
+
+
+discourseAnalytics downloads the user profiles and post histories into the folder `./datasets/Discourse/html_files`.
+The downloaded files get scraped and packaged into one `json` file that contains all the available user information of every user.
+
   
 ### Download speed
 
-This process can take some time. It can be sped up with the argument `sleep_time` by lowering the amount of time that `selenium` waits to load more content after scrolling to the bottom.  
+The download process can take some time. To speed things up you can use the argument `sleep_time`, which changes the amount of seconds that `selenium` waits to load more content after scrolling to the bottom.  
 ```python
 dataset = DiscourseDataset(discourse_website, sleep_time=1)
 ```
@@ -62,7 +59,11 @@ dataset = DiscourseDataset(discourse_website, supress_output=False)
 
 ### Filtering Posts
 
-Calling the resulting `DiscourseDataset` class object instance returns a new instance of DiscourseDataset with a subset of the posts.
+Calling the ```DiscourseDataset``` with a filter argument such as `username` returns a new instance of ```DiscourseDataset``` with a subset of the posts
+
+```python
+john_does_posts = dataset(username="JohnDoe")
+```
 
 #### Filtering by username, full name, topic, category
 
