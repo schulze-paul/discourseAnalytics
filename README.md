@@ -3,7 +3,7 @@
 
 [Installation](#installation) | [How it works](#how-it-works) | [Initialization](#initialization) | [Filter](#filter) | [Search](#search) | [Sort](#sort) | [Print](#print) | [Activity Plot](#activity-plot)
 
-Data analytics toolbox and crawler in Python for Discourse.
+Data analytics toolbox and data crawler in Python for Discourse.
 
 The discourseAnalytics API makes it easy to *sort*, *filter* and *search* through posts and *display* or *plot* the data. 
 
@@ -46,13 +46,21 @@ The downloaded files get scraped and packaged into one `json` file that contains
 Click on any of the headers to see more information: 
 
 <details>
+<summary><i>Download folder</i></summary>
+
+ You can change the download folder to a custom folder with the argument `dataset_folder`.
+```python
+dataset = DiscourseDataset(discourse_website, dataset_folder='/home/user/Data/DiscourseDataset')
+```
+</details>
+
+<details>
 <summary><i>Download speed</i></summary>
  
   The download process can take some time. To speed things up, you can use the argument `sleep_time`. This changes the amount of seconds that `selenium` waits to load more content after scrolling to the bottom.  
 ```python
 dataset = DiscourseDataset(discourse_website, sleep_time=1)
 ```
-
 </details>
 
 <details>
@@ -115,24 +123,34 @@ posts_after_2007 = dataset(post_after=end_of_2007)
 
 ## Search
 
-Posts can be searched with a keyword by calling `.search(keyword)`. All posts that contain the "keyword" in the `text`, `topic`, `category` or `username` are returned.
+Posts can be searched with a keyword by calling `.search(keyword)`. All posts that contain the keyword in their `text`, `topic`, `category` or `username` are returned.
 
 ## Sort
 
 ## Print
 
-Writing / Displaying list of posts
-
-With `.display()`, 
-
-A list of the posts can be displayed with `.display()` or written to an `html` file with `.write(filename)`. 
-The posts are sorted by post time.
-The `html` file can be overwritten with `.write(filename, overwrite=True)`
+Pretty printing the dataset.
 
 <p align="center">
 <img  src="https://raw.githubusercontent.com/bl4ckp4nther4/discourseAnalytics/main/images/display_function.PNG" width="500">
 </p>
 
+Pretty print
+```python
+print(dataset)
+```
+
+Display posts with hyperlinks to topics and users
+```python
+dataset.display()
+```
+
+Write html file of posts with hyperlinks to topics and users
+```python
+filename = 'my_posts
+
+dataset.write('my_posts')
+```
 
 ## Activity Plot
 
