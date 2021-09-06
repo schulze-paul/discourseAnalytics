@@ -1,3 +1,4 @@
+from seaborn.distributions import distplot
 from python_script.data.discourse_downloader import DiscourseDownloader
 from python_script.data.discourse_converter import DiscourseConverter
 from python_script.data.discourse_data_loader import DiscourseDataLoader
@@ -11,6 +12,7 @@ from IPython.core.display import display, HTML
 from datetime import datetime
 import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator
+import seaborn as sns
 
 class DiscourseDataset():
     """
@@ -93,47 +95,6 @@ class DiscourseDataset():
         posts = self._filter_posts(username, full_name, join_before, join_after, last_post_before, last_post_after, member_status, topic, topic_link, post_before, post_after, text, category, empty)
         return DiscourseDataset(self.website_url, posts=posts)
 
-    def __iter__(self) -> iter:
-        if self.posts is not None:
-            return iter(self.posts)
-
-    def __len__(self) -> int:
-        if self.posts is not None:
-            return len(self.posts) 
-
-    def __getitem__(self, key: int or slice or str) -> list or dict:
-        # if key is integer or slice, return item(s) from list
-        if isinstance(key, int) or isinstance(key, slice):
-            return self.posts[key]
-
-        # if key is string, return unique list with key property from the posts
-        if isinstance(key, str): 
-            return list(set([post[key] for post in self.posts if key in post]))
-        
-    def __eq__(self, obj) -> bool:
-        # compare posts of dataset
-        return self.posts == obj.posts
-
-    def __str__(self) -> str:
-        """
-        Pretty prints post topic, username, time and text 
-        """
-        def get_post_time(post):
-            return str(self.timestamp_to_datetime(post['post_timestamp']))
-
-        # go through posts and post one by one, sorted by date
-        sorted_posts = sorted(self.posts, key=lambda p: p.get('post_timestamp', sys.maxsize), reverse=True)
-        
-        string_list = []
-        for post in sorted_posts:
-            header = post['topic'] + " | " + post['username'] + " | "  + get_post_time(post)
-            text =  (post['text'] + "\n")
-
-            string_list.append(header)
-            string_list.append(text)
-        
-        return "\n".join(string_list)
-
     def search(self, *strings):
         """
         Finds posts with string in the text or as topic.
@@ -146,7 +107,7 @@ class DiscourseDataset():
         
         strings = [string.lower() for string in strings] # ignore case(upper/lower)
         posts = [post for post in posts if 'text' in post and 'topic' in post and post['text'] is not None and post['topic'] is not None ]
-        posts = [post for post in posts if any([string in post['text'].lower() or string in post['topic'].lower() or [string in post['username'].lower() for string in strings])]
+        posts = [post for post in posts if any([string in post['text'].lower() or string in post['topic'].lower() or string in post['username'].lower()] for string in strings)]
 
         return DiscourseDataset(self.website_url, posts=posts)
     
@@ -155,7 +116,7 @@ class DiscourseDataset():
 
     def write(self, filename: str, overwrite=False):
         """
-        Writes an html to disk.
+        Writes an html file with posts to disk.
 
         Input:
         :param filename: string, path to file
@@ -180,6 +141,9 @@ class DiscourseDataset():
             with io.open(filepath, 'w', encoding="utf-8") as outfile:
                 outfile.write(html)
                 outfile.close()
+
+    def sort(keyword: str):
+        pass
 
     # ====================================================================================== #
     # INITIALIZATION:                                                                        #
@@ -334,11 +298,64 @@ class DiscourseDataset():
         # return dataset of filtered posts
         return filtered_posts
     
+    def __iter__(self) -> iter:
+        if self.posts is not None:
+            return iter(self.posts)
+
+    # ====================================================================================== #
+    # BUILT IN FUNCTIONS:                                                                    #
+    # ====================================================================================== #
+
+    def __len__(self) -> int:
+        if self.posts is not None:
+            return len(self.posts) 
+
+    def __getitem__(self, key: int or slice or str) -> list or dict:
+        # if key is integer or slice, return item(s) from list
+        if isinstance(key, int) or isinstance(key, slice):
+            return self.posts[key]
+
+        # if key is string, return unique list with key property from the posts
+        if isinstance(key, str): 
+            return list(set([post[key] for post in self.posts if key in post]))
+        
+    def __eq__(self, obj) -> bool:
+        # compare posts of dataset
+        return self.posts == obj.posts
+
+    def __str__(self) -> str:
+        """
+        Pretty prints post topic, username, time and text 
+        """
+        def get_post_time(post):
+            return str(self.timestamp_to_datetime(post['post_timestamp']))
+
+        # go through posts and post one by one, sorted by date
+        sorted_posts = sorted(self.posts, key=lambda p: p.get('post_timestamp', sys.maxsize), reverse=True)
+        
+        string_list = []
+        for post in sorted_posts:
+            header = post['topic'] + " | " + post['username'] + " | "  + get_post_time(post)
+            text =  (post['text'] + "\n")
+
+            string_list.append(header)
+            string_list.append(text)
+        
+        return "\n".join(string_list)
+
+
     # ====================================================================================== #
     # PLOTTING:                                                                            #
     # ====================================================================================== #
     
     def plot(self, title=None):
+        """
+        Plots a smoothed histogram of post frequency
+        """
+        
+        sns.displot(self['post_timestamp'], bins=500)
+
+    def hist(self, title=None):
         """
         Plots a histogram of post times with months as bins
         """
@@ -441,6 +458,3 @@ class DiscourseDataset():
         if type(timestamp) is list:
             return [datetime.fromtimestamp(np.floor(stamp/1000)) for stamp in timestamp]
 
-from python_script.data.website_base_data import WEBSITE_URL
-if __name__ == '__main__':
-    dataset = DiscourseDataset(WEBSITE_URL)
