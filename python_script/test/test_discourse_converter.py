@@ -24,12 +24,12 @@ class TestDiscourseConverter(unittest.TestCase):
 
         def set_up_soups(self):
             # profile soup
-            profile_html_filepath = os.path.join(self.html_folder, "profiles", "Matt_Cliffe")
+            profile_html_filepath = os.path.join(self.html_folder, "profiles", "Matt_Cliffe.test")
             user_profile_html = open(profile_html_filepath, 'rb')
             self.profile_soup = soup(user_profile_html, "html.parser")
 
             # post history soup
-            post_history_html_filepath = os.path.join(self.html_folder, "post_histories", "Matt_Cliffe")
+            post_history_html_filepath = os.path.join(self.html_folder, "post_histories", "Matt_Cliffe.test")
             user_post_history_html = open(post_history_html_filepath, 'rb')
             self.post_history_soup = soup(user_post_history_html, "html.parser")
             for index, post in enumerate(self.post_history_soup):
@@ -43,7 +43,7 @@ class TestDiscourseConverter(unittest.TestCase):
         self.converter._set_up_folders(overwrite=False)
 
     def test_convert_user_profiles(self):
-        profiles_html = [os.path.join(self.html_folder, "profiles", "Matt_Cliffe")]
+        profiles_html = [os.path.join(self.html_folder, "profiles", "Matt_Cliffe.test")]
         self.converter._convert_user_profiles(profiles_html)
         
         # test filenames
@@ -66,7 +66,7 @@ class TestDiscourseConverter(unittest.TestCase):
             self.assertTrue(file_content, expected_content)
 
     def test_convert_post_histories(self):
-        post_histories_html = [os.path.join(self.html_folder, "post_histories", "Matt_Cliffe")]
+        post_histories_html = [os.path.join(self.html_folder, "post_histories", "Matt_Cliffe.test")]
         self.converter._convert_post_histories(post_histories_html)
         
         # test filenames
