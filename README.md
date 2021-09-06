@@ -3,13 +3,13 @@
 
 [Installation](#installation) | [How it works](#how-it-works) | [Initialization](#initialization) | [Filter](#filter) | [Search](#search) | [Sort](#sort) | [Print](#print) | [Activity Plot](#activity-plot)
 
-Data analytics toolbox in Python for Discourse.
+Data analytics toolbox and crawler in Python for Discourse.
 
-The API makes it easy to sort, filter and search through posts and display the data. 
+The discourseAnalytics API makes it easy to *sort*, *filter* and *search* through posts and *display* or *plot* the data. 
 
 ## How it works
 
-Using `selenuim` and `BeautifulSoup4`
+[selenium](https://selenium-python.readthedocs.io/installation.html) downloads the user data and public posts as `html` files. [BeautifulSoup4]() takes the `html` files and converts the data into python objects. The data is cached as `json` files and converted into a custom dataset format that is accessible via the discourseAnalytics API.
 
 ## Installation
 
@@ -46,7 +46,7 @@ The downloaded files get scraped and packaged into one `json` file that contains
 Click on any of the headers to see more information: 
 
 <details>
-<summary>Download speed</summary>
+<summary><i>Download speed</i></summary>
  
   The download process can take some time. To speed things up, you can use the argument `sleep_time`. This changes the amount of seconds that `selenium` waits to load more content after scrolling to the bottom.  
 ```python
@@ -56,7 +56,7 @@ dataset = DiscourseDataset(discourse_website, sleep_time=1)
 </details>
 
 <details>
-<summary>Redownload data</summary>
+<summary><i>Redownload data</i></summary>
 
 If the source files get corruped, the data can be redownloaded with the arguments `overwrite_html=True` and `overwrite_html=True`.  
 ```python
@@ -66,7 +66,7 @@ dataset = DiscourseDataset(discourse_website, overwrite_html=True, overwrite_jso
 </details>  
 
 <details>
-<summary>Detailed output</summary>
+<summary><i>Detailed output</i></summary>
 
 A more detailed output while downloading and scraping can be printed with the argument `supress_output=False`.  
 ```python
@@ -79,8 +79,6 @@ dataset = DiscourseDataset(discourse_website, supress_output=False)
 
 Calling the ```DiscourseDataset``` with a filter argument such as `username` returns a new instance of ```DiscourseDataset``` with the respective  subset of the posts.
 
-Posts ca be filtered by `username`, `full_name`, `topic` and `category`.
-
 ```python
 # all posts by user "JohnSmith"
 posts_by_john = dataset(username="JohnSmith")
@@ -92,7 +90,11 @@ posts_in_hi = dataset(topic="Hi I am John")
 posts_by_John_in_hi = dataset(username="JohnSmith", topic="Hi I am John")
 ```
 
-### - Filtering by Time 
+Posts can be filtered by `username`, `full_name`, `topic` and `category`.  
+And with time filter arguments such `post_before`, `post_after`, `join_before`, `join_after`, `last_post_before`, `last_post_after`, or a combination of the above
+
+
+### Filter by Time 
 
 The `DiscourseDataset` class can also filter posts according to different times. 
 You can filter according to the post time, the join time and the last time a user posted something.
@@ -109,6 +111,7 @@ end_of_2007 = datetime.date(2007, 12, 31)
 # pass datetime object and filter posts
 posts_after_2007 = dataset(post_after=end_of_2007)
 ```
+
 
 ## Search
 
