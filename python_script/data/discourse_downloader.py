@@ -81,6 +81,7 @@ class DiscourseDownloader():
         if Path(self.user_list_html_filepath).is_file() and not overwrite:
             # html file already exists, dont overwrite
             if not supress_output: print("user_data_html already exists, skipping download")
+            
         else:
             if Path(self.user_list_html_filepath).is_file() and overwrite:
                 # html file should be overwritten
@@ -169,7 +170,7 @@ class DiscourseDownloader():
         options.add_experimental_option('excludeSwitches', ['enable-logging'])
 
         # start chrome browser
-        self.driver = webdriver.Chrome("C:/Users/Thesis/chromedriver/chromedriver.exe", options=options)
+        self.driver = webdriver.Chrome(options=options)
         
     def _quit_chrome_browser(self):
         self.driver.quit()

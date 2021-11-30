@@ -4,7 +4,7 @@ import json
 import io
 import os
 import re
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 import shutil
 import sys
 
