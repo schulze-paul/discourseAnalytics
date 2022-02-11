@@ -1,5 +1,6 @@
 # discourseAnalytics
-
+ 
+Author: [Paul Schulze](https://schulze-paul.github.io)
 
 [Installation](#installation) | [How it works](#how-it-works) | [Initialization](#initialization) | [Filter](#filter) | [Search](#search) | [Sort](#sort) | [Print](#print) | [Activity Plot](#activity-plot)
 
